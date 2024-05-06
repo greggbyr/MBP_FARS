@@ -1,5 +1,9 @@
 #!/usr/bin/perl
 
+# Added CWD to make it easier to execute code when moving to a new directory
+use Cwd qw(abs_path);
+use File::Basename qw( dirname );
+
 ## todo:
 ## specify what dirs are needed, where they're expected, etc.
 ## customize to take an input parameter "-input ref" or "-input test"
@@ -31,7 +35,11 @@
 
 ###########################################################################
 ## hpux/linux/NT specific settings go up here
-$exp_dir = "/u/greggbyr/Documents/ece587/proj_git/simulator";
+
+#See CWD note above
+my $path = dirname(abs_path($0));
+
+$exp_dir = "$path";
 $bench_dir = "$exp_dir/bench";
 $input_dir = "$exp_dir/input/ref";
 $output_dir = "$exp_dir/output/ref";
