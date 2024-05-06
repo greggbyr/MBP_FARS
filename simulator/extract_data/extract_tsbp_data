@@ -1,0 +1,7 @@
+ls results/*tsbp*.txt | xargs -I % sh -c 'grep -H "bpred_tsbp.bpred_addr_rate" %' > bpred_tsbp.bpred_addr_rate.csv
+ls results/*tsbp*.txt | xargs -I % sh -c 'grep -H "bpred_tsbp.bpred_dir_rate" %' > bpred_tsbp.bpred_dir_rate.csv
+ls results/*tsbp*.txt | xargs -I % sh -c 'grep -H "bpred_tsbp.bpred_jr_rate" %' > bpred_tsbp.bpred_jr_rate.csv
+ls results/*tsbp*.txt | xargs -I % sh -c 'grep -H "bpred_tsbp.bpred_jr_non_ras_rate.PP" %' > bpred_tsbp.bpred_jr_non_ras_rate.PP.csv
+ls results/*tsbp*.txt | xargs -I % sh -c 'grep -H "bpred_tsbp.ras_rate.PP" %' > bpred_tsbp.ras_rate.PP.csv
+ls results/*tsbp*.txt | xargs -I % sh -c 'grep -H "bpred_tsbp.misses" %' > bpred_tsbp.misses.csv
+ls results/*tsbp*.txt | xargs -I % sh -c 'grep -H "sim_num_insn" %' > bpred_tsbp.sim_num_insn.csv
