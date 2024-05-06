@@ -1,0 +1,16 @@
+echo "Sourcing: ./bench_runs/bench_runs_tsbp_128KB"
+source ./bench_runs/bench_runs_tsbp_128KB
+echo "Sourcing: ./bench_runs/bench_runs_tsbp_16KB"
+source ./bench_runs/bench_runs_tsbp_16KB
+echo "Sourcing: ./bench_runs/bench_runs_tsbp_1MB"
+source ./bench_runs/bench_runs_tsbp_1MB
+echo "Sourcing: ./bench_runs/bench_runs_tsbp_256KB"
+source ./bench_runs/bench_runs_tsbp_256KB
+echo "Sourcing: ./bench_runs/bench_runs_tsbp_32KB"
+source ./bench_runs/bench_runs_tsbp_32KB
+echo "Sourcing: ./bench_runs/bench_runs_tsbp_512KB"
+source ./bench_runs/bench_runs_tsbp_512KB
+echo "Sourcing: ./bench_runs/bench_runs_tsbp_64KB"
+source ./bench_runs/bench_runs_tsbp_64KB
+echo "Sourcing: ./bench_runs/bench_runs_tsbp_CB_var"
+source ./bench_runs/bench_runs_tsbp_CB_var

@@ -1,0 +1,46 @@
+echo "running cmd for gzip"
+./Run.pl -db ./bench.db -dir ./results/gzip_gshare_256KB -benchmark gzip -sim ./ss3/sim-outorder -args "-bpred 2lev -bpred:2lev 1 262144 18 1" >& ./results/gzip_gshare_256KB.txt
+echo "running cmd for vpr"
+./Run.pl -db ./bench.db -dir ./results/vpr_gshare_256KB -benchmark vpr -sim ./ss3/sim-outorder -args "-bpred 2lev -bpred:2lev 1 262144 18 1" >& ./results/vpr_gshare_256KB.txt
+echo "running cmd for gcc2k"
+./Run.pl -db ./bench.db -dir ./results/gcc2k_gshare_256KB -benchmark gcc2k -sim ./ss3/sim-outorder -args "-bpred 2lev -bpred:2lev 1 262144 18 1" >& ./results/gcc2k_gshare_256KB.txt
+echo "running cmd for mcf"
+./Run.pl -db ./bench.db -dir ./results/mcf_gshare_256KB -benchmark mcf -sim ./ss3/sim-outorder -args "-bpred 2lev -bpred:2lev 1 262144 18 1" >& ./results/mcf_gshare_256KB.txt
+echo "running cmd for crafty"
+./Run.pl -db ./bench.db -dir ./results/crafty_gshare_256KB -benchmark crafty -sim ./ss3/sim-outorder -args "-bpred 2lev -bpred:2lev 1 262144 18 1" >& ./results/crafty_gshare_256KB.txt
+echo "running cmd for go"
+./Run.pl -db ./bench.db -dir ./results/go_gshare_256KB -benchmark go -sim ./ss3/sim-outorder -args "-bpred 2lev -bpred:2lev 1 262144 18 1" >& ./results/go_gshare_256KB.txt
+echo "running cmd for gcc"
+./Run.pl -db ./bench.db -dir ./results/gcc_gshare_256KB -benchmark gcc -sim ./ss3/sim-outorder -args "-bpred 2lev -bpred:2lev 1 262144 18 1" >& ./results/gcc_gshare_256KB.txt
+echo "running cmd for m88ksim"
+./Run.pl -db ./bench.db -dir ./results/m88ksim_gshare_256KB -benchmark m88ksim -sim ./ss3/sim-outorder -args "-bpred 2lev -bpred:2lev 1 262144 18 1" >& ./results/m88ksim_gshare_256KB.txt
+echo "running cmd for compress"
+./Run.pl -db ./bench.db -dir ./results/compress_gshare_256KB -benchmark compress -sim ./ss3/sim-outorder -args "-bpred 2lev -bpred:2lev 1 262144 18 1" >& ./results/compress_gshare_256KB.txt
+echo "running cmd for li"
+./Run.pl -db ./bench.db -dir ./results/li_gshare_256KB -benchmark li -sim ./ss3/sim-outorder -args "-bpred 2lev -bpred:2lev 1 262144 18 1" >& ./results/li_gshare_256KB.txt
+echo "running cmd for ijpeg"
+./Run.pl -db ./bench.db -dir ./results/ijpeg_gshare_256KB -benchmark ijpeg -sim ./ss3/sim-outorder -args "-bpred 2lev -bpred:2lev 1 262144 18 1" >& ./results/ijpeg_gshare_256KB.txt
+echo "running cmd for perl"
+./Run.pl -db ./bench.db -dir ./results/perl_gshare_256KB -benchmark perl -sim ./ss3/sim-outorder -args "-bpred 2lev -bpred:2lev 1 262144 18 1" >& ./results/perl_gshare_256KB.txt
+echo "running cmd for vortex"
+./Run.pl -db ./bench.db -dir ./results/vortex_gshare_256KB -benchmark vortex -sim ./ss3/sim-outorder -args "-bpred 2lev -bpred:2lev 1 262144 18 1" >& ./results/vortex_gshare_256KB.txt
+echo "running cmd for tomcatv"
+./Run.pl -db ./bench.db -dir ./results/tomcatv_gshare_256KB -benchmark tomcatv -sim ./ss3/sim-outorder -args "-bpred 2lev -bpred:2lev 1 262144 18 1" >& ./results/tomcatv_gshare_256KB.txt
+echo "running cmd for swim"
+./Run.pl -db ./bench.db -dir ./results/swim_gshare_256KB -benchmark swim -sim ./ss3/sim-outorder -args "-bpred 2lev -bpred:2lev 1 262144 18 1" >& ./results/swim_gshare_256KB.txt
+echo "running cmd for su2cor"
+./Run.pl -db ./bench.db -dir ./results/su2cor_gshare_256KB -benchmark su2cor -sim ./ss3/sim-outorder -args "-bpred 2lev -bpred:2lev 1 262144 18 1" >& ./results/su2cor_gshare_256KB.txt
+echo "running cmd for hydro2d"
+./Run.pl -db ./bench.db -dir ./results/hydro2d_gshare_256KB -benchmark hydro2d -sim ./ss3/sim-outorder -args "-bpred 2lev -bpred:2lev 1 262144 18 1" >& ./results/hydro2d_gshare_256KB.txt
+echo "running cmd for mgrid"
+./Run.pl -db ./bench.db -dir ./results/mgrid_gshare_256KB -benchmark mgrid -sim ./ss3/sim-outorder -args "-bpred 2lev -bpred:2lev 1 262144 18 1" >& ./results/mgrid_gshare_256KB.txt
+echo "running cmd for applu"
+./Run.pl -db ./bench.db -dir ./results/applu_gshare_256KB -benchmark applu -sim ./ss3/sim-outorder -args "-bpred 2lev -bpred:2lev 1 262144 18 1" >& ./results/applu_gshare_256KB.txt
+echo "running cmd for turb3d"
+./Run.pl -db ./bench.db -dir ./results/turb3d_gshare_256KB -benchmark turb3d -sim ./ss3/sim-outorder -args "-bpred 2lev -bpred:2lev 1 262144 18 1" >& ./results/turb3d_gshare_256KB.txt
+echo "running cmd for apsi"
+./Run.pl -db ./bench.db -dir ./results/apsi_gshare_256KB -benchmark apsi -sim ./ss3/sim-outorder -args "-bpred 2lev -bpred:2lev 1 262144 18 1" >& ./results/apsi_gshare_256KB.txt
+
+
+
+

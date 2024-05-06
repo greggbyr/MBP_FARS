@@ -1,0 +1,7 @@
+ls results/*gshare*.txt | xargs -I % sh -c 'grep -H "bpred_2lev.bpred_addr_rate" %' > bpred_2lev.bpred_addr_rate.csv
+ls results/*gshare*.txt | xargs -I % sh -c 'grep -H "bpred_2lev.bpred_dir_rate" %' > bpred_2lev.bpred_dir_rate.csv
+ls results/*gshare*.txt | xargs -I % sh -c 'grep -H "bpred_2lev.bpred_jr_rate" %' > bpred_2lev.bpred_jr_rate.csv
+ls results/*gshare*.txt | xargs -I % sh -c 'grep -H "bpred_2lev.bpred_jr_non_ras_rate.PP" %' > bpred_2lev.bpred_jr_non_ras_rate.PP.csv
+ls results/*gshare*.txt | xargs -I % sh -c 'grep -H "bpred_2lev.ras_rate.PP" %' > bpred_2lev.ras_rate.PP.csv
+ls results/*gshare*.txt | xargs -I % sh -c 'grep -H "bpred_2lev.misses" %' > bpred_2lev.misses.csv
+ls results/*gshare*.txt | xargs -I % sh -c 'grep -H "sim_num_insn" %' > bpred_2lev.sim_num_insn.csv

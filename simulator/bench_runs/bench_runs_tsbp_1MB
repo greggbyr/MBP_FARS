@@ -1,0 +1,46 @@
+echo "running cmd for gzip"
+./Run.pl -db ./bench.db -dir ./results/gzip_tsbp_1MB -benchmark gzip -sim ./ss3/sim-outorder -args "-bpred tsbp -bpred:tsbp 1 1048576 20 1 16" >& ./results/gzip_tsbp_1MB.txt
+echo "running cmd for vpr"
+./Run.pl -db ./bench.db -dir ./results/vpr_tsbp_1MB -benchmark vpr -sim ./ss3/sim-outorder -args "-bpred tsbp -bpred:tsbp 1 1048576 20 1 16" >& ./results/vpr_tsbp_1MB.txt
+echo "running cmd for gcc2k"
+./Run.pl -db ./bench.db -dir ./results/gcc2k_tsbp_1MB -benchmark gcc2k -sim ./ss3/sim-outorder -args "-bpred tsbp -bpred:tsbp 1 1048576 20 1 16" >& ./results/gcc2k_tsbp_1MB.txt
+echo "running cmd for mcf"
+./Run.pl -db ./bench.db -dir ./results/mcf_tsbp_1MB -benchmark mcf -sim ./ss3/sim-outorder -args "-bpred tsbp -bpred:tsbp 1 1048576 20 1 16" >& ./results/mcf_tsbp_1MB.txt
+echo "running cmd for crafty"
+./Run.pl -db ./bench.db -dir ./results/crafty_tsbp_1MB -benchmark crafty -sim ./ss3/sim-outorder -args "-bpred tsbp -bpred:tsbp 1 1048576 20 1 16" >& ./results/crafty_tsbp_1MB.txt
+echo "running cmd for go"
+./Run.pl -db ./bench.db -dir ./results/go_tsbp_1MB -benchmark go -sim ./ss3/sim-outorder -args "-bpred tsbp -bpred:tsbp 1 1048576 20 1 16" >& ./results/go_tsbp_1MB.txt
+echo "running cmd for gcc"
+./Run.pl -db ./bench.db -dir ./results/gcc_tsbp_1MB -benchmark gcc -sim ./ss3/sim-outorder -args "-bpred tsbp -bpred:tsbp 1 1048576 20 1 16" >& ./results/gcc_tsbp_1MB.txt
+echo "running cmd for m88ksim"
+./Run.pl -db ./bench.db -dir ./results/m88ksim_tsbp_1MB -benchmark m88ksim -sim ./ss3/sim-outorder -args "-bpred tsbp -bpred:tsbp 1 1048576 20 1 16" >& ./results/m88ksim_tsbp_1MB.txt
+echo "running cmd for compress"
+./Run.pl -db ./bench.db -dir ./results/compress_tsbp_1MB -benchmark compress -sim ./ss3/sim-outorder -args "-bpred tsbp -bpred:tsbp 1 1048576 20 1 16" >& ./results/compress_tsbp_1MB.txt
+echo "running cmd for li"
+./Run.pl -db ./bench.db -dir ./results/li_tsbp_1MB -benchmark li -sim ./ss3/sim-outorder -args "-bpred tsbp -bpred:tsbp 1 1048576 20 1 16" >& ./results/li_tsbp_1MB.txt
+echo "running cmd for ijpeg"
+./Run.pl -db ./bench.db -dir ./results/ijpeg_tsbp_1MB -benchmark ijpeg -sim ./ss3/sim-outorder -args "-bpred tsbp -bpred:tsbp 1 1048576 20 1 16" >& ./results/ijpeg_tsbp_1MB.txt
+echo "running cmd for perl"
+./Run.pl -db ./bench.db -dir ./results/perl_tsbp_1MB -benchmark perl -sim ./ss3/sim-outorder -args "-bpred tsbp -bpred:tsbp 1 1048576 20 1 16" >& ./results/perl_tsbp_1MB.txt
+echo "running cmd for vortex"
+./Run.pl -db ./bench.db -dir ./results/vortex_tsbp_1MB -benchmark vortex -sim ./ss3/sim-outorder -args "-bpred tsbp -bpred:tsbp 1 1048576 20 1 16" >& ./results/vortex_tsbp_1MB.txt
+echo "running cmd for tomcatv"
+./Run.pl -db ./bench.db -dir ./results/tomcatv_tsbp_1MB -benchmark tomcatv -sim ./ss3/sim-outorder -args "-bpred tsbp -bpred:tsbp 1 1048576 20 1 16" >& ./results/tomcatv_tsbp_1MB.txt
+echo "running cmd for swim"
+./Run.pl -db ./bench.db -dir ./results/swim_tsbp_1MB -benchmark swim -sim ./ss3/sim-outorder -args "-bpred tsbp -bpred:tsbp 1 1048576 20 1 16" >& ./results/swim_tsbp_1MB.txt
+echo "running cmd for su2cor"
+./Run.pl -db ./bench.db -dir ./results/su2cor_tsbp_1MB -benchmark su2cor -sim ./ss3/sim-outorder -args "-bpred tsbp -bpred:tsbp 1 1048576 20 1 16" >& ./results/su2cor_tsbp_1MB.txt
+echo "running cmd for hydro2d"
+./Run.pl -db ./bench.db -dir ./results/hydro2d_tsbp_1MB -benchmark hydro2d -sim ./ss3/sim-outorder -args "-bpred tsbp -bpred:tsbp 1 1048576 20 1 16" >& ./results/hydro2d_tsbp_1MB.txt
+echo "running cmd for mgrid"
+./Run.pl -db ./bench.db -dir ./results/mgrid_tsbp_1MB -benchmark mgrid -sim ./ss3/sim-outorder -args "-bpred tsbp -bpred:tsbp 1 1048576 20 1 16" >& ./results/mgrid_tsbp_1MB.txt
+echo "running cmd for applu"
+./Run.pl -db ./bench.db -dir ./results/applu_tsbp_1MB -benchmark applu -sim ./ss3/sim-outorder -args "-bpred tsbp -bpred:tsbp 1 1048576 20 1 16" >& ./results/applu_tsbp_1MB.txt
+echo "running cmd for turb3d"
+./Run.pl -db ./bench.db -dir ./results/turb3d_tsbp_1MB -benchmark turb3d -sim ./ss3/sim-outorder -args "-bpred tsbp -bpred:tsbp 1 1048576 20 1 16" >& ./results/turb3d_tsbp_1MB.txt
+echo "running cmd for apsi"
+./Run.pl -db ./bench.db -dir ./results/apsi_tsbp_1MB -benchmark apsi -sim ./ss3/sim-outorder -args "-bpred tsbp -bpred:tsbp 1 1048576 20 1 16" >& ./results/apsi_tsbp_1MB.txt
+
+
+
+

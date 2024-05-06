@@ -1,0 +1,14 @@
+echo "Sourcing: ./bench_run./bench_runs/bench_runs_gshare_128KB"
+source ./bench_run./bench_runs/bench_runs_gshare_128KB
+echo "Sourcing: ./bench_run./bench_runs/bench_runs_gshare_16KB"
+source ./bench_run./bench_runs/bench_runs_gshare_16KB
+echo "Sourcing: ./bench_run./bench_runs/bench_runs_gshare_1MB"
+source ./bench_run./bench_runs/bench_runs_gshare_1MB
+echo "Sourcing: ./bench_run./bench_runs/bench_runs_gshare_256KB"
+source ./bench_run./bench_runs/bench_runs_gshare_256KB
+echo "Sourcing: ./bench_run./bench_runs/bench_runs_gshare_32KB"
+source ./bench_run./bench_runs/bench_runs_gshare_32KB
+echo "Sourcing: ./bench_run./bench_runs/bench_runs_gshare_512KB"
+source ./bench_run./bench_runs/bench_runs_gshare_512KB
+echo "Sourcing: ./bench_run./bench_runs/bench_runs_gshare_64KB"
+source ./bench_run./bench_runs/bench_runs_gshare_64KB
