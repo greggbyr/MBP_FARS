@@ -1,0 +1,14 @@
+reading benchmark database ./bench.db
+Doing hydro2d
+Installing hydro2d
+ln -s /home/greggbyr/common/Documents/MBP_ReCISC/simulator/bench/little/hydro2d.ss run.hydro2d
+Pre-run hydro2d
+cp /home/greggbyr/common/Documents/MBP_ReCISC/simulator/input/ref/hydro2d.* . ; cp /home/greggbyr/common/Documents/MBP_ReCISC/simulator/input/ref/HYDRO2D.MODEL .
+cp: cannot stat '/home/greggbyr/common/Documents/MBP_ReCISC/simulator/input/ref/hydro2d.*': No such file or directory
+cp: cannot stat '/home/greggbyr/common/Documents/MBP_ReCISC/simulator/input/ref/HYDRO2D.MODEL': No such file or directory
+Run hydro2d
+/home/greggbyr/common/Documents/MBP_ReCISC/simulator/ss3/sim-outorder -max:inst 10000000 -bpred tsbp -bpred:tsbp 1 262144 18 1 16 run.hydro2d  < hydro2d.in > hydro2d.out
+sh: 1: cannot open hydro2d.in: No such file
+****** program returns ERROR 512
+Post-run hydro2d
+rm -f -r hydro2d.* HYDRO2D.*

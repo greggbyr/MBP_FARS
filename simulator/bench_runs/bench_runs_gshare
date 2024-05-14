@@ -1,14 +1,14 @@
-echo "Sourcing: ./bench_run./bench_runs/bench_runs_gshare_128KB"
-source ./bench_run./bench_runs/bench_runs_gshare_128KB
-echo "Sourcing: ./bench_run./bench_runs/bench_runs_gshare_16KB"
-source ./bench_run./bench_runs/bench_runs_gshare_16KB
-echo "Sourcing: ./bench_run./bench_runs/bench_runs_gshare_1MB"
-source ./bench_run./bench_runs/bench_runs_gshare_1MB
-echo "Sourcing: ./bench_run./bench_runs/bench_runs_gshare_256KB"
-source ./bench_run./bench_runs/bench_runs_gshare_256KB
-echo "Sourcing: ./bench_run./bench_runs/bench_runs_gshare_32KB"
-source ./bench_run./bench_runs/bench_runs_gshare_32KB
-echo "Sourcing: ./bench_run./bench_runs/bench_runs_gshare_512KB"
-source ./bench_run./bench_runs/bench_runs_gshare_512KB
-echo "Sourcing: ./bench_run./bench_runs/bench_runs_gshare_64KB"
-source ./bench_run./bench_runs/bench_runs_gshare_64KB
+ls bench/little/ | xargs -I % csh -c 'basename % .ss' | xargs -I % csh -c 'grep "%\..ext" bench.db' | grep -oP 'BINARIES\{"\K\w+' | xargs -I % csh -c 'echo "running cmd for % gshare at 16KB"; ./Run.pl -db ./bench.db -dir ./results/%_gshare_16KB -benchmark % -sim `pwd`/ss3/sim-outorder -args "-max:inst 10000000 -bpred 2lev -bpred:2lev 1 16384 14 1" >& ./results/%_gshare_16KB.txt'
+
+ls bench/little/ | xargs -I % csh -c 'basename % .ss' | xargs -I % csh -c 'grep "%\..ext" bench.db' | grep -oP 'BINARIES\{"\K\w+' | xargs -I % csh -c 'echo "running cmd for % gshare at 32 KB"; ./Run.pl -db ./bench.db -dir ./results/%_gshare_32KB -benchmark % -sim `pwd`/ss3/sim-outorder -args "-max:inst 10000000 -bpred 2lev -bpred:2lev 1 32768 15 1" >& ./results/%_gshare_32KB.txt'
+
+ls bench/little/ | xargs -I % csh -c 'basename % .ss' | xargs -I % csh -c 'grep "%\..ext" bench.db' | grep -oP 'BINARIES\{"\K\w+' | xargs -I % csh -c 'echo "running cmd for % gshare at 64 KB"; ./Run.pl -db ./bench.db -dir ./results/%_gshare_64KB -benchmark % -sim `pwd`/ss3/sim-outorder -args "-max:inst 10000000 -bpred 2lev -bpred:2lev 1 65536 16 1" >& ./results/%_gshare_64KB.txt'
+
+ls bench/little/ | xargs -I % csh -c 'basename % .ss' | xargs -I % csh -c 'grep "%\..ext" bench.db' | grep -oP 'BINARIES\{"\K\w+' | xargs -I % csh -c 'echo "running cmd for % gshare at 128 KB"; ./Run.pl -db ./bench.db -dir ./results/%_gshare_128KB -benchmark % -sim `pwd`/ss3/sim-outorder -args "-max:inst 10000000 -bpred 2lev -bpred:2lev 1 131072 17 1" >& ./results/%_gshare_128KB.txt'
+
+ls bench/little/ | xargs -I % csh -c 'basename % .ss' | xargs -I % csh -c 'grep "%\..ext" bench.db' | grep -oP 'BINARIES\{"\K\w+' | xargs -I % csh -c 'echo "running cmd for % gshare at 256 KB"; ./Run.pl -db ./bench.db -dir ./results/%_gshare_256KB -benchmark % -sim `pwd`/ss3/sim-outorder -args "-max:inst 10000000 -bpred 2lev -bpred:2lev 1 262144 18 1" >& ./results/%_gshare_256KB.txt'
+
+ls bench/little/ | xargs -I % csh -c 'basename % .ss' | xargs -I % csh -c 'grep "%\..ext" bench.db' | grep -oP 'BINARIES\{"\K\w+' | xargs -I % csh -c 'echo "running cmd for % gshare at 512 KB"; ./Run.pl -db ./bench.db -dir ./results/%_gshare_512KB -benchmark % -sim `pwd`/ss3/sim-outorder -args "-max:inst 10000000 -bpred 2lev -bpred:2lev 1 524288 19 1" >& ./results/%_gshare_512KB.txt'
+
+ls bench/little/ | xargs -I % csh -c 'basename % .ss' | xargs -I % csh -c 'grep "%\..ext" bench.db' | grep -oP 'BINARIES\{"\K\w+' | xargs -I % csh -c 'echo "running cmd for % gshare at 1 MB"; ./Run.pl -db ./bench.db -dir ./results/%_gshare_1MB -benchmark % -sim `pwd`/ss3/sim-outorder -args "-max:inst 10000000 -bpred 2lev -bpred:2lev 1 1048576 20 1" >& ./results/%_gshare_1MB.txt'
+
