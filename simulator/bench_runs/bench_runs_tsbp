@@ -1,16 +1,14 @@
-echo "Sourcing: ./bench_runs/bench_runs_tsbp_128KB"
-source ./bench_runs/bench_runs_tsbp_128KB
-echo "Sourcing: ./bench_runs/bench_runs_tsbp_16KB"
-source ./bench_runs/bench_runs_tsbp_16KB
-echo "Sourcing: ./bench_runs/bench_runs_tsbp_1MB"
-source ./bench_runs/bench_runs_tsbp_1MB
-echo "Sourcing: ./bench_runs/bench_runs_tsbp_256KB"
-source ./bench_runs/bench_runs_tsbp_256KB
-echo "Sourcing: ./bench_runs/bench_runs_tsbp_32KB"
-source ./bench_runs/bench_runs_tsbp_32KB
-echo "Sourcing: ./bench_runs/bench_runs_tsbp_512KB"
-source ./bench_runs/bench_runs_tsbp_512KB
-echo "Sourcing: ./bench_runs/bench_runs_tsbp_64KB"
-source ./bench_runs/bench_runs_tsbp_64KB
-echo "Sourcing: ./bench_runs/bench_runs_tsbp_CB_var"
-source ./bench_runs/bench_runs_tsbp_CB_var
+ls bench/little/ | xargs -I % csh -c 'basename % .ss' | xargs -I % csh -c 'grep "%\..ext" bench.db' | grep -oP 'BINARIES\{"\K\w+' | xargs -I % csh -c 'echo "running cmd for % tsbp at 16KB"; ./Run.pl -db ./bench.db -dir ./results/%_tsbp_16KB -benchmark % -sim `pwd`/ss3/sim-outorder -args "-max:inst 10000000 -bpred tsbp -bpred:tsbp 1 16384 14 1 16" >& ./results/%_tsbp_16KB.txt'
+
+ls bench/little/ | xargs -I % csh -c 'basename % .ss' | xargs -I % csh -c 'grep "%\..ext" bench.db' | grep -oP 'BINARIES\{"\K\w+' | xargs -I % csh -c 'echo "running cmd for % tsbp at 32 KB"; ./Run.pl -db ./bench.db -dir ./results/%_tsbp_32KB -benchmark % -sim `pwd`/ss3/sim-outorder -args "-max:inst 10000000 -bpred tsbp -bpred:tsbp 1 32768 15 1 16" >& ./results/%_tsbp_32KB.txt'
+
+ls bench/little/ | xargs -I % csh -c 'basename % .ss' | xargs -I % csh -c 'grep "%\..ext" bench.db' | grep -oP 'BINARIES\{"\K\w+' | xargs -I % csh -c 'echo "running cmd for % tsbp at 64 KB"; ./Run.pl -db ./bench.db -dir ./results/%_tsbp_64KB -benchmark % -sim `pwd`/ss3/sim-outorder -args "-max:inst 10000000 -bpred tsbp -bpred:tsbp 1 65536 16 1 16" >& ./results/%_tsbp_64KB.txt'
+
+ls bench/little/ | xargs -I % csh -c 'basename % .ss' | xargs -I % csh -c 'grep "%\..ext" bench.db' | grep -oP 'BINARIES\{"\K\w+' | xargs -I % csh -c 'echo "running cmd for % tsbp at 128 KB"; ./Run.pl -db ./bench.db -dir ./results/%_tsbp_128KB -benchmark % -sim `pwd`/ss3/sim-outorder -args "-max:inst 10000000 -bpred tsbp -bpred:tsbp 1 131072 17 1 16" >& ./results/%_tsbp_128KB.txt'
+
+ls bench/little/ | xargs -I % csh -c 'basename % .ss' | xargs -I % csh -c 'grep "%\..ext" bench.db' | grep -oP 'BINARIES\{"\K\w+' | xargs -I % csh -c 'echo "running cmd for % tsbp at 256 KB"; ./Run.pl -db ./bench.db -dir ./results/%_tsbp_256KB -benchmark % -sim `pwd`/ss3/sim-outorder -args "-max:inst 10000000 -bpred tsbp -bpred:tsbp 1 262144 18 1 16" >& ./results/%_tsbp_256KB.txt'
+
+ls bench/little/ | xargs -I % csh -c 'basename % .ss' | xargs -I % csh -c 'grep "%\..ext" bench.db' | grep -oP 'BINARIES\{"\K\w+' | xargs -I % csh -c 'echo "running cmd for % tsbp at 512 KB"; ./Run.pl -db ./bench.db -dir ./results/%_tsbp_512KB -benchmark % -sim `pwd`/ss3/sim-outorder -args "-max:inst 10000000 -bpred tsbp -bpred:tsbp 1 524288 19 1 16" >& ./results/%_tsbp_512KB.txt'
+
+ls bench/little/ | xargs -I % csh -c 'basename % .ss' | xargs -I % csh -c 'grep "%\..ext" bench.db' | grep -oP 'BINARIES\{"\K\w+' | xargs -I % csh -c 'echo "running cmd for % tsbp at 1 MB"; ./Run.pl -db ./bench.db -dir ./results/%_tsbp_1MB -benchmark % -sim `pwd`/ss3/sim-outorder -args "-max:inst 10000000 -bpred tsbp -bpred:tsbp 1 1048576 20 1 16" >& ./results/%_tsbp_1MB.txt'
+
