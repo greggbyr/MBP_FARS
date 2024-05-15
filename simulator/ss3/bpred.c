@@ -111,7 +111,7 @@ bpred_create(enum bpred_class class,	/* type of predictor to create */
       bpred_dir_create(BPred2Level, l1size, l2size, shift_width, xor);
 	
 	pred->dirpred.tsbp =
-	  bpred_ts_create(class, 0, head_table_width, ((unsigned int)l2size << 3)); /* md_addr_t is the size of the PC*/
+	  bpred_ts_create(class, 1, head_table_width, ((unsigned int)l2size << 3)); /* md_addr_t is the size of the PC*/
     break;
 
   case BPred2bit:
@@ -321,9 +321,9 @@ bpred_ts_create (
   if (!pred_ts->ts.correctness_buffer)
 	fatal("cannot allocate correctness buffer");
 
-   /* initializing CB bits to 0*/
+   /* initializing CB bits to 1*/
   for (key = 0; key < pred_ts->ts.correctness_width; key++)
-  	pred_ts->ts.correctness_buffer[key] = 0;
+  	pred_ts->ts.correctness_buffer[key] = 1;
 
   /* initialize current head of the correctness buffer */
   pred_ts->ts.head = 0;
