@@ -1,7 +1,8 @@
-ls results/*gshare*.txt | xargs -I % sh -c 'grep -H "bpred_2lev.bpred_addr_rate" %' > compiled_results/bpred_2lev.bpred_addr_rate.csv
-ls results/*gshare*.txt | xargs -I % sh -c 'grep -H "bpred_2lev.bpred_dir_rate" %' > compiled_results/bpred_2lev.bpred_dir_rate.csv
-ls results/*gshare*.txt | xargs -I % sh -c 'grep -H "bpred_2lev.bpred_jr_rate" %' > compiled_results/bpred_2lev.bpred_jr_rate.csv
-ls results/*gshare*.txt | xargs -I % sh -c 'grep -H "bpred_2lev.bpred_jr_non_ras_rate.PP" %' > compiled_results/bpred_2lev.bpred_jr_non_ras_rate.PP.csv
-ls results/*gshare*.txt | xargs -I % sh -c 'grep -H "bpred_2lev.ras_rate.PP" %' > compiled_results/bpred_2lev.ras_rate.PP.csv
-ls results/*gshare*.txt | xargs -I % sh -c 'grep -H "bpred_2lev.misses" %' > compiled_results/bpred_2lev.misses.csv
-ls results/*gshare*.txt | xargs -I % sh -c 'grep -H "sim_num_insn" %' > compiled_results/bpred_2lev.sim_num_insn.csv
+echo "bench,bpred,size,metric,value" > compiled_results/gshare.csv
+ls results/*gshare*.txt | xargs -I % sh -c 'grep -H "bpred_.*.bpred_addr_rate" %' | sed -r 's|results/||g' | sed -r 's|\..*:|,|' | sed -r 's|bpred_[^\_]+\.||g' | sed -r 's|\s+#.*||g' | sed -r 's|_gshare_|,gshare,|g' | sed -r 's|\s+|,|g' | sed -r 's|[,]+|,|g' >> compiled_results/gshare.csv
+ls results/*gshare*.txt | xargs -I % sh -c 'grep -H "bpred_.*.bpred_dir_rate" %' | sed -r 's|results/||g' | sed -r 's|\..*:|,|' | sed -r 's|bpred_[^\_]+\.||g' | sed -r 's|\s+#.*||g' | sed -r 's|_gshare_|,gshare,|g' | sed -r 's|\s+|,|g' | sed -r 's|[,]+|,|g' >> compiled_results/gshare.csv
+ls results/*gshare*.txt | xargs -I % sh -c 'grep -H "bpred_.*.bpred_jr_rate" %' | sed -r 's|results/||g' | sed -r 's|\..*:|,|' | sed -r 's|bpred_[^\_]+\.||g' | sed -r 's|\s+#.*||g' | sed -r 's|_gshare_|,gshare,|g' | sed -r 's|\s+|,|g' | sed -r 's|[,]+|,|g' >> compiled_results/gshare.csv
+ls results/*gshare*.txt | xargs -I % sh -c 'grep -H "bpred_.*.bpred_jr_non_ras_rate.PP" %' | sed -r 's|results/||g' | sed -r 's|\..*:|,|' | sed -r 's|bpred_[^\_]+\.||g' | sed -r 's|\s+#.*||g' | sed -r 's|_gshare_|,gshare,|g' | sed -r 's|\s+|,|g' | sed -r 's|[,]+|,|g' >> compiled_results/gshare.csv
+ls results/*gshare*.txt | xargs -I % sh -c 'grep -H "bpred_.*.ras_rate.PP" %' | sed -r 's|results/||g' | sed -r 's|\..*:|,|' | sed -r 's|bpred_[^\_]+\.||g' | sed -r 's|\s+#.*||g' | sed -r 's|_gshare_|,gshare,|g' | sed -r 's|\s+|,|g' | sed -r 's|[,]+|,|g' >> compiled_results/gshare.csv
+ls results/*gshare*.txt | xargs -I % sh -c 'grep -H "bpred_.*.misses" %' | sed -r 's|results/||g' | sed -r 's|\..*:|,|' | sed -r 's|bpred_[^\_]+\.||g' | sed -r 's|\s+#.*||g' | sed -r 's|_gshare_|,gshare,|g' | sed -r 's|\s+|,|g' | sed -r 's|[,]+|,|g' >> compiled_results/gshare.csv
+ls results/*gshare*.txt | xargs -I % sh -c 'grep -H "sim_num_insn" %' | sed -r 's|results/||g' | sed -r 's|\..*:|,|' | sed -r 's|bpred_[^\_]+\.||g' | sed -r 's|\s+#.*||g' | sed -r 's|_gshare_|,gshare,|g' | sed -r 's|\s+|,|g' | sed -r 's|[,]+|,|g' >> compiled_results/gshare.csv
