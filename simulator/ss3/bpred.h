@@ -102,6 +102,7 @@ enum bpred_class {
   BPredComb,                    /* combined predictor (McFarling) */
   BPred2Level,			/* 2-level correlating pred w/2-bit counters */
   BPredTSBP,			/* Temporal Stream Branch Predictor */
+  BPredMBP,				/* Mississippi Branch Predictor */
   BPred2bit,			/* 2-bit saturating cntr pred (dir mapped) */
   BPredTaken,			/* static predict taken */
   BPredNotTaken,		/* static predict not taken */
@@ -149,8 +150,18 @@ struct bpred_ts_t {
 	unsigned int head;					/* head of the circular buffer */
 	unsigned int tail;					/* tail of the circular buffer */
 	bool_t replay;						/* replay flag */
-	bool_t enabled;				/* TSBP Enabled flag */
+	bool_t enabled;						/* TSBP Enabled flag */
   } ts;
+};
+
+/* temporal stream predictor def */
+struct bpred_mbp_t {
+  enum bpred_class class;				/* type of predictor */
+  struct {
+    unsigned int cht_size;				/* correctness history table size, number of table entries */
+	bool_t enabled;						/* MBP Enabled flag */
+	unsigned int *cht;					/* Correctness history table*/
+  } mbp;
 };
 
 /* branch predictor def */
@@ -160,6 +171,7 @@ struct bpred_t {
     struct bpred_dir_t *bimod;	  /* first direction predictor */
     struct bpred_dir_t *twolev;	  /* second direction predictor */
 	struct bpred_ts_t  *tsbp;	  /* temporal stream */
+	struct bpred_mbp_t *mbp;	  /* Mississippi branch predictor */
     struct bpred_dir_t *meta;	  /* meta predictor */
   } dirpred;
 
@@ -233,13 +245,20 @@ bpred_dir_create (
   unsigned int xor);	   	/* history xor address flag */
 
 
-/* create a branch direction predictor */
+/* create a TS branch direction predictor */
 struct bpred_ts_t *		/* temporal stream branch predictor instance */
 bpred_ts_create (
   enum bpred_class class,	/* type of predictor to create */
   unsigned int ts_enabled,              /* TSBP Enabled Flag */
   unsigned int head_table_width,	 	/* head table width */
   unsigned int head_table_size);			/* header table size */
+
+/* create a Mississippi branch direction predictor */
+struct bpred_mbp_t *		/* temporal stream branch predictor instance */
+bpred_mbp_create (
+  enum bpred_class class,	/* type of predictor to create */
+  unsigned int mbp_enabled,              /* MBP Enabled Flag */
+  unsigned int cht_size);			/* header table size */
 
 /* print branch predictor configuration */
 void

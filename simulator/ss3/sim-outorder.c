@@ -127,6 +127,11 @@ static int twolev_config[4] =
 static int tsbp_nelt = 5;
 static int tsbp_config[5] =
   { /* l1size */1, /* l2size */16384, /* hist */14, /* xor */TRUE, /*head_table_width*/ 16384};
+  
+/* MBP config (<l1size> <l2size> <hist_size> <xor> <cht_size>) */  
+static int mbp_nelt = 5;
+static int mbp_config[5] =
+  { /* l1size */1, /* l2size */16384, /* hist */14, /* xor */TRUE, /*cht_size*/ 16384};
 
 /* combining predictor config (<meta_table_size> */
 static int comb_nelt = 1;
@@ -655,7 +660,7 @@ sim_reg_options(struct opt_odb_t *odb)
                );
 
   opt_reg_string(odb, "-bpred",
-		 "branch predictor type {nottaken|taken|perfect|bimod|2lev|comb|tsbp}",
+		 "branch predictor type {nottaken|taken|perfect|bimod|2lev|comb|tsbp|mbp}",
                  &pred_type, /* default */"bimod",
                  /* print */TRUE, /* format */NULL);
 
@@ -677,6 +682,13 @@ sim_reg_options(struct opt_odb_t *odb)
 		   "(<l1size> <l2size> <hist_size> <xor> <head_table_width>)",
                    tsbp_config, tsbp_nelt, &tsbp_nelt,
 		   /* default */tsbp_config,
+                   /* print */TRUE, /* format */NULL, /* !accrue */FALSE);
+				   
+  opt_reg_int_list(odb, "-bpred:mbp",
+                   "MBP config "
+		   "(<l1size> <l2size> <hist_size> <xor> <cht_size>)",
+                   mbp_config, mbp_nelt, &mbp_nelt,
+		   /* default */mbp_config,
                    /* print */TRUE, /* format */NULL, /* !accrue */FALSE);
 
   opt_reg_int_list(odb, "-bpred:comb",
@@ -938,7 +950,8 @@ sim_check_options(struct opt_odb_t *odb,        /* options database */
 			  /* meta table size */0,
 			  /* history reg size */0,
 			  /* history xor address */0,
-        /* TSBP Header Width */0,
+			  /* TSBP Header Width */0,
+			  /* MBP CHT Size */0,
 			  /* btb sets */btb_config[0],
 			  /* btb assoc */btb_config[1],
 			  /* ret-addr stack size */ras_size);
@@ -958,7 +971,8 @@ sim_check_options(struct opt_odb_t *odb,        /* options database */
 			  /* meta table size */0,
 			  /* history reg size */twolev_config[2],
 			  /* history xor address */twolev_config[3],
-        /* TSBP Header Width */0,
+			  /* TSBP Header Width */0,
+			  /* MBP CHT Size */0,
 			  /* btb sets */btb_config[0],
 			  /* btb assoc */btb_config[1],
 			  /* ret-addr stack size */ras_size);
@@ -979,6 +993,28 @@ sim_check_options(struct opt_odb_t *odb,        /* options database */
 			  /* history reg size */tsbp_config[2],
 			  /* history xor address */tsbp_config[3],
 			  /* TSBP Header Width */tsbp_config[4],
+			  /* MBP CHT Size */0,
+			  /* btb sets */btb_config[0],
+			  /* btb assoc */btb_config[1],
+			  /* ret-addr stack size */ras_size);
+    }
+  else if (!mystricmp(pred_type, "mbp"))
+    {
+      /* Mississippi branch predictor, bpred_create() checks args */
+      if (mbp_nelt != 5)
+	fatal("bad MBP pred config (<l1size> <l2size> <hist_size> <xor> <cht_size>)");
+      if (btb_nelt != 2)
+	fatal("bad btb config (<num_sets> <associativity>)");
+
+      pred = bpred_create(BPredMBP,
+			  /* bimod table size */0,
+			  /* 2lev l1 size */mbp_config[0],
+			  /* 2lev l2 size */mbp_config[1],
+			  /* meta table size */0,
+			  /* history reg size */mbp_config[2],
+			  /* history xor address */mbp_config[3],
+			  /* TSBP Header Width */0,
+			  /* MBP CHT Size */mbp_config[4],
 			  /* btb sets */btb_config[0],
 			  /* btb assoc */btb_config[1],
 			  /* ret-addr stack size */ras_size);
@@ -1002,7 +1038,8 @@ sim_check_options(struct opt_odb_t *odb,        /* options database */
 			  /* meta table size */comb_config[0],
 			  /* history reg size */twolev_config[2],
 			  /* history xor address */twolev_config[3],
-        /* TSBP Header Width */0,
+			  /* TSBP Header Width */0,
+			  /* MBP CHT Size */0,
 			  /* btb sets */btb_config[0],
 			  /* btb assoc */btb_config[1],
 			  /* ret-addr stack size */ras_size);

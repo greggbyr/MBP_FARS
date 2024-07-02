@@ -71,7 +71,8 @@ bpred_create(enum bpred_class class,	/* type of predictor to create */
 	     unsigned int meta_size,	/* meta table size */
 	     unsigned int shift_width,	/* history register width */
 	     unsigned int xor,  	/* history xor address flag */
-       unsigned int head_table_width, /*TS head table width*/
+		 unsigned int head_table_width, /*TS head table width*/
+		 unsigned int cht_size, /*MBP correctness history table width*/
 	     unsigned int btb_sets,	/* number of sets in BTB */ 
 	     unsigned int btb_assoc,	/* BTB associativity */
 	     unsigned int retstack_size) /* num entries in ret-addr stack */
@@ -112,6 +113,14 @@ bpred_create(enum bpred_class class,	/* type of predictor to create */
 	
 	pred->dirpred.tsbp =
 	  bpred_ts_create(class, 1, head_table_width, ((unsigned int)l2size << 3)); /* md_addr_t is the size of the PC*/
+    break;
+	
+  case BPredMBP:
+    pred->dirpred.twolev = 
+      bpred_dir_create(BPred2Level, l1size, l2size, shift_width, xor);
+	
+	pred->dirpred.mbp =
+	  bpred_mbp_create(class, 1, cht_size);
     break;
 
   case BPred2bit:
@@ -280,7 +289,7 @@ bpred_ts_create (
   enum bpred_class class,	/* type of predictor to create */
   unsigned int ts_enabled,              /* TSBP Enabled Flag */
   unsigned int head_table_width,	 	/* head table width */
-  unsigned int head_table_size)			/* header table size */
+  unsigned int head_table_size)			/* head table size */
 {
   struct bpred_ts_t *pred_ts;
   unsigned int key;
@@ -343,6 +352,44 @@ bpred_ts_create (
   return pred_ts;
 }
 
+/* create a branch direction predictor */
+struct bpred_mbp_t *		/* temporal stream branch predictor instance */
+bpred_mbp_create (
+  enum bpred_class class,	/* type of predictor to create */
+  unsigned int mbp_enabled,              /* MBP Enabled Flag */
+  unsigned int cht_size)			/* Correctness History Table size */
+{
+  struct bpred_mbp_t *pred_mbp;
+  unsigned int key;
+  
+  if (!(pred_mbp = calloc(1, sizeof(struct bpred_mbp_t))))
+    fatal("out of virtual memory");
+
+  pred_mbp->class = class;
+
+  if (!cht_size || (cht_size & (cht_size - 1)) != 0)
+	fatal("correctness history table size, `%d', must be non-zero and a power of two", cht_size);
+  
+  pred_mbp->mbp.cht_size = cht_size;
+  
+  pred_mbp->mbp.cht = calloc(cht_size, ((sizeof(unsigned int) * 2) + 1)); /* Need to allocate for source key, source PC, replay bit, correctness bit, valid bit, and destination PC*/
+  
+  if (!pred_mbp->mbp.cht)
+	fatal("cannot allocate correctness history table");
+
+  /* initializing correctness history table entries to 0*/
+  for (key = 0; key < cht_size; key++)
+	  pred_mbp->mbp.cht[key] = 0;
+
+  /* initialize enabled flag */
+  if (mbp_enabled == 0)
+          pred_mbp->mbp.enabled = FALSE;
+  else
+          pred_mbp->mbp.enabled = TRUE;
+
+  return pred_mbp;
+}
+
 /* print branch direction predictor configuration */
 void
 bpred_dir_config(
@@ -359,6 +406,13 @@ bpred_dir_config(
     break;
 	
   case BPredTSBP:
+    fprintf(stream,
+      "pred_dir: %s: 2-lvl: %d l1-sz, %d bits/ent, %s xor, %d l2-sz, direct-mapped\n",
+      name, pred_dir->config.two.l1size, pred_dir->config.two.shift_width,
+      pred_dir->config.two.xor ? "" : "no", pred_dir->config.two.l2size);
+    break;
+	
+  case BPredMBP:
     fprintf(stream,
       "pred_dir: %s: 2-lvl: %d l1-sz, %d bits/ent, %s xor, %d l2-sz, direct-mapped\n",
       name, pred_dir->config.two.l1size, pred_dir->config.two.shift_width,
@@ -396,6 +450,18 @@ bpred_ts_config(
 	pred_ts->ts.correctness_width);
 }
 
+/* print mississippi branch predictor configuration */
+void
+bpred_mbp_config(
+  struct bpred_mbp_t *pred_mbp,	/* branch direction predictor instance */
+  char name[],			/* predictor name */
+  FILE *stream)			/* output stream */
+{
+  fprintf(stream,
+    "pred_mbp: %s: mbp: %d cht-sz\n",
+    name, pred_mbp->mbp.cht_size);
+}
+
 /* print branch predictor configuration */
 void
 bpred_config(struct bpred_t *pred,	/* branch predictor instance */
@@ -421,6 +487,14 @@ bpred_config(struct bpred_t *pred,	/* branch predictor instance */
   case BPredTSBP:
     bpred_dir_config (pred->dirpred.twolev, "2lev", stream);
 	bpred_ts_config (pred->dirpred.tsbp, "tsbp", stream);
+    fprintf(stream, "btb: %d sets x %d associativity", 
+	    pred->btb.sets, pred->btb.assoc);
+    fprintf(stream, "ret_stack: %d entries", pred->retstack.size);
+    break;
+	
+  case BPredMBP:
+    bpred_dir_config (pred->dirpred.twolev, "2lev", stream);
+	bpred_mbp_config (pred->dirpred.mbp, "mbp", stream);
     fprintf(stream, "btb: %d sets x %d associativity", 
 	    pred->btb.sets, pred->btb.assoc);
     fprintf(stream, "ret_stack: %d entries", pred->retstack.size);
@@ -475,6 +549,9 @@ bpred_reg_stats(struct bpred_t *pred,	/* branch predictor instance */
 	case BPredTSBP:
       name = "bpred_tsbp";
       break;
+	case BPredMBP:
+      name = "bpred_mbp";
+      break;
     case BPred2bit:
       name = "bpred_bimod";
       break;
@@ -513,7 +590,7 @@ bpred_reg_stats(struct bpred_t *pred,	/* branch predictor instance */
 		       "total number of 2-level predictions used", 
 		       &pred->used_2lev, 0, NULL);
     }
-  if (pred->class == BPredTSBP) {
+  if (pred->class == BPredTSBP || pred->class == BPredMBP) {
        sprintf(buf, "%s.replays", name);
        stat_reg_counter(sdb, buf, "total number of replays", &pred->replays, 0, NULL);
   }
@@ -603,6 +680,37 @@ bpred_after_priming(struct bpred_t *bpred)
   ((((ADDR) >> 19) ^ ((ADDR) >> MD_BR_SHIFT)) & ((PRED)->config.bimod.size-1))
     /* was: ((baddr >> 16) ^ baddr) & (pred->dirpred.bimod.size-1) */
 
+/* Used to calculate 2nd level table indexes/keys for 2lev, tsbp, and mbp*/
+
+int key_from_features (struct bpred_dir_t *pred_dir,	/* branch dir predictor inst */
+		 md_addr_t baddr)		/* branch address */
+{
+	int l1index, key;
+
+    /* traverse 2-level tables */
+    l1index = (baddr >> MD_BR_SHIFT) & (pred_dir->config.two.l1size - 1);
+    key = pred_dir->config.two.shiftregs[l1index];
+        
+	if (pred_dir->config.two.xor) {
+	    /* this L2 index computation is more "compatible" to McFarling's
+	       verison of it, i.e., if the PC xor address component is only
+	       part of the index, take the lower order address bits for the
+	       other part of the index, rather than the higher order ones */
+#if 1  
+	    key = (((key ^ (baddr >> MD_BR_SHIFT))
+			& ((1 << pred_dir->config.two.shift_width) - 1))
+		    | ((baddr >> MD_BR_SHIFT)
+			<< pred_dir->config.two.shift_width));
+#else   
+		key = key ^ (baddr >> MD_BR_SHIFT);
+#endif
+	} else {
+		key = key | ((baddr >> MD_BR_SHIFT) << pred_dir->config.two.shift_width);
+	}
+	
+	return key;
+}
+
 /* predicts a branch direction */
 char *						/* pointer to counter */
 bpred_dir_lookup(struct bpred_dir_t *pred_dir,	/* branch dir predictor inst */
@@ -614,33 +722,10 @@ bpred_dir_lookup(struct bpred_dir_t *pred_dir,	/* branch dir predictor inst */
   switch (pred_dir->class) {
     case BPred2Level:  
     case BPredTSBP:         /*Add TSBP case, should be same as 2 level to get base prediction*/
+	case BPredMBP:         /*Add MBP case, should be same as 2 level to get base prediction*/
       {
-	int l1index, l2index;
-
-        /* traverse 2-level tables */
-        l1index = (baddr >> MD_BR_SHIFT) & (pred_dir->config.two.l1size - 1);
-        l2index = pred_dir->config.two.shiftregs[l1index];
-        if (pred_dir->config.two.xor)
-	  {
-#if 1
-	    /* this L2 index computation is more "compatible" to McFarling's
-	       verison of it, i.e., if the PC xor address component is only
-	       part of the index, take the lower order address bits for the
-	       other part of the index, rather than the higher order ones */
-	    l2index = (((l2index ^ (baddr >> MD_BR_SHIFT))
-			& ((1 << pred_dir->config.two.shift_width) - 1))
-		       | ((baddr >> MD_BR_SHIFT)
-			  << pred_dir->config.two.shift_width));
-#else
-	    l2index = l2index ^ (baddr >> MD_BR_SHIFT);
-#endif
-	  }
-	else
-	  {
-	    l2index =
-	      l2index
-		| ((baddr >> MD_BR_SHIFT) << pred_dir->config.two.shift_width);
-	  }
+		int l2index = key_from_features (pred_dir, baddr); //Get un-masked l2index  
+		
         l2index = l2index & (pred_dir->config.two.l2size - 1);
 
         /* get a pointer to prediction state information */
@@ -728,53 +813,50 @@ bpred_lookup(struct bpred_t *pred,	/* branch predictor instance */
 	    bpred_dir_lookup (pred->dirpred.twolev, baddr);
 	}
       break;
-/**************************add TSBP case*********************************************/
+/**************************added TSBP case*********************************************/
     case BPredTSBP:   
-       if ((MD_OP_FLAGS(op) & (F_CTRL|F_UNCOND)) != (F_CTRL|F_UNCOND)) {
-	  char *dir_lookup;
-          //dir_lookup = bpred_dir_lookup (pred->dirpred.twolev, baddr);  //get 2level base outcome prediction
-    	  dir_update_ptr->pdir1 = bpred_dir_lookup (pred->dirpred.twolev, baddr);  //get 2level base outcome prediction
-	  
-	  //base_outcome = *dir_lookup;
-          //unsigned int head;
-          
-          int i;
-          unsigned int pc = (unsigned int)baddr; // & ( <<  pred->dirpred.twolev->config.two.shift_width); /*shift PC by L1 width of L1 global history reg*/
-          unsigned int ghr = 0;
+		if ((MD_OP_FLAGS(op) & (F_CTRL|F_UNCOND)) != (F_CTRL|F_UNCOND)) {
+			dir_update_ptr->pdir1 = bpred_dir_lookup (pred->dirpred.twolev, baddr);  //get 2level base outcome prediction
+			
+			int key = key_from_features (pred->dirpred.twolev, baddr); // Get unmasked key from GHR and PC
+			
+			key = key & (pred->dirpred.tsbp->ts.head_table_size - 1); // mask key based on predictor table size
 
-	  for (i = 1; i < 33; i++) {
-            ghr = ghr | (pred->dirpred.twolev->config.two.shiftregs[pred->dirpred.twolev->config.two.shift_width-i] << (i - 1));
-          }
+			/*if in replay mode and corretness buffer head indicates base predictor mistake*/
+			if(pred->dirpred.tsbp->ts.replay 
+				&& (pred->dirpred.tsbp->ts.head_table[key] != NULL)
+				&& pred->dirpred.tsbp->ts.enabled 
+				&& (pred->dirpred.tsbp->ts.correctness_buffer[pred->dirpred.tsbp->ts.head_table[key]] == 0)) {
+                invert = TRUE; 
+			}
+		}
+        break;
+/**************************added MBP case*********************************************/
+	case BPredMBP:   
+		if ((MD_OP_FLAGS(op) & (F_CTRL|F_UNCOND)) != (F_CTRL|F_UNCOND)) {
+			dir_update_ptr->pdir1 = bpred_dir_lookup (pred->dirpred.twolev, baddr);  //get 2level base outcome prediction
+			
+			int key = key_from_features (pred->dirpred.twolev, baddr); // Get unmasked key from GHR and PC
+			
+			key = key & (pred->dirpred.mbp->mbp.cht_size - 1); // mask key based on predictor table size
 
-	  unsigned int key = pc ^ ghr;
-
-          unsigned int key_mask = 0;
-          for(i = 0; i < (pred->dirpred.twolev->config.two.shift_width + 3); i++){
-             key_mask = key_mask | (1 << i); /*shift reg bit by i bits into key*/
-          }
-
-          key = key & key_mask;
-
-          /*if in replay mode and corretness buffer head indicates base predictor mistake*/
-          if(pred->dirpred.tsbp->ts.replay && (pred->dirpred.tsbp->ts.head_table[key] != NULL)) {
-             /*Prevent CB head from going out of bounds*/
-	     
-	
-             //if (pred->dirpred.tsbp->ts.head >= pred->dirpred.tsbp->ts.correctness_width) {
-	       // head = 0;
-	     //} else {
-	       // head = pred->dirpred.tsbp->ts.head + 1;
-	     //}
-	  
-	     if (pred->dirpred.tsbp->ts.enabled && (pred->dirpred.tsbp->ts.correctness_buffer[pred->dirpred.tsbp->ts.head_table[key]] == 0)) {
-                //base_outcome = 3 - base_outcome;		//Set base outcome to opposite value (if 3, becomes 0 or if 1 becomes 2)
-    	        invert = TRUE; 
-	     }
-          }
-
-	  //dir_update_ptr->pdir1 = &base_outcome;
-       }
-           break;
+			/* Get CHT components */
+			md_addr_t address_mask, dst_pc, src_pc;
+			int valid, correct, replay;
+			
+			address_mask = ((1 << (sizeof(md_addr_t) * 8)) - 1);
+			//dst_pc = pred->dirpred.mbp->mbp.cht[key] & address_mask; // Get destination addr
+			//valid = (pred->dirpred.mbp->mbp.cht[key] >> (sizeof(md_addr_t) * 8)) & 1; //Get valid bit
+			correct = (pred->dirpred.mbp->mbp.cht[key] >> ((sizeof(md_addr_t) * 8) + 1)) & 1; //Get correctness bit
+			replay = (pred->dirpred.mbp->mbp.cht[key] >> ((sizeof(md_addr_t) * 8) + 2)) & 1; //Get replay bit
+			src_pc = (pred->dirpred.mbp->mbp.cht[key] >> ((sizeof(md_addr_t) * 8) + 3)) & address_mask; //Get source addr
+			
+			/*if enabled, replay bit set, correctness bits is 0, and src_pc matches baddr predictor is inverted*/
+			if (pred->dirpred.mbp->mbp.enabled && replay && !correct && (src_pc == baddr)) {
+				invert = TRUE; 
+			}
+		}
+        break;
     case BPred2bit:
       if ((MD_OP_FLAGS(op) & (F_CTRL|F_UNCOND)) != (F_CTRL|F_UNCOND))
 	{
@@ -938,7 +1020,6 @@ bpred_update(struct bpred_t *pred,	/* branch predictor instance */
   struct bpred_btb_ent_t *lruhead = NULL, *lruitem = NULL;
   int index, i;
   unsigned int head;
-  bool_t was_replay = FALSE;
   bool_t was_inverted = FALSE;
 
   /* don't change bpred state for non-branch instructions or if this
@@ -1028,111 +1109,130 @@ bpred_update(struct bpred_t *pred,	/* branch predictor instance */
     }
 
   /***********************IF TS update L1 table as above, also update correctness buffer*****************************/
-  if ((MD_OP_FLAGS(op) & (F_CTRL|F_UNCOND)) != (F_CTRL|F_UNCOND) &&
-      (pred->class == BPredTSBP))           
-  {
-      int l1index, shift_reg;
+	if ((MD_OP_FLAGS(op) & (F_CTRL|F_UNCOND)) != (F_CTRL|F_UNCOND) && (pred->class == BPredTSBP)) {
+		int l1index, shift_reg;
     
-      /* update L1 table, same as 2lev/comb predictors above this */
-      l1index = (baddr >> MD_BR_SHIFT) & (pred->dirpred.twolev->config.two.l1size - 1);
-      shift_reg = (pred->dirpred.twolev->config.two.shiftregs[l1index] << 1) | (!!taken);
-      pred->dirpred.twolev->config.two.shiftregs[l1index] = shift_reg & ((1 << pred->dirpred.twolev->config.two.shift_width) - 1);
+		/* update L1 table, same as 2lev/comb predictors above this */
+		l1index = (baddr >> MD_BR_SHIFT) & (pred->dirpred.twolev->config.two.l1size - 1);
+		shift_reg = (pred->dirpred.twolev->config.two.shiftregs[l1index] << 1) | (!!taken);
+		pred->dirpred.twolev->config.two.shiftregs[l1index] = shift_reg & ((1 << pred->dirpred.twolev->config.two.shift_width) - 1);
 
-      int base_outcome;
-      int ts_outcome;
-      //unsigned int key;  /*added typedef in tsbp.h file*/
+		int base_outcome;
+		int ts_outcome;
+		//unsigned int key;  /*added typedef in tsbp.h file*/
       
-      /*create key concatenating current PC and global history bits*/
-       int i;
-          unsigned int pc = (unsigned int)baddr; // & ( <<  pred->dirpred.twolev->config.two.shift_width); /*shift PC by L1 width of L1 global history reg*/
-          unsigned int ghr = 0;
+		int key = key_from_features (pred->dirpred.twolev, baddr); // Get unmasked key from GHR and PC
+			
+		key = key & (pred->dirpred.tsbp->ts.head_table_size - 1); // mask key based on predictor table size
+		
+		/*Set the base outcome; Also if in replay mode and ts_outcome is incorrect, turn off replay mode*/
+		if (pred->dirpred.tsbp->ts.replay && (pred->dirpred.tsbp->ts.head_table[key] != NULL)) {
+			pred->replays++;
+			ts_outcome = pred_taken;
 
-          for (i = 1; i < 33; i++) {
-            ghr = ghr | (pred->dirpred.twolev->config.two.shiftregs[pred->dirpred.twolev->config.two.shift_width-i] << (i - 1));
-          }
+			if (pred->dirpred.tsbp->ts.enabled && (pred->dirpred.tsbp->ts.correctness_buffer[pred->dirpred.tsbp->ts.head_table[key]] == 0)) {
+				base_outcome = !pred_taken;
+				was_inverted = TRUE;
+			} else {
+				base_outcome = pred_taken;
+			}
 
-          unsigned int key = pc ^ ghr;
-
-          unsigned int key_mask = 0;
-          for(i = 0; i < (pred->dirpred.twolev->config.two.shift_width + 3); i++){
-             key_mask = key_mask | (1 << i); /*shift reg bit by i bits into key*/
-          }
-
-          key = key & key_mask;
-
-
-
-      /* Set a pointer to head++ */
-      //if (pred->dirpred.tsbp->ts.head >= pred->dirpred.tsbp->ts.correctness_width) {
-        // head = 0;
-      //} else {
-        // head = pred->dirpred.tsbp->ts.head + 1;
-      //}
-
-      /*Set the base outcome; Also if in replay mode and ts_outcome is incorrect, turn off replay mode*/
-      if (pred->dirpred.tsbp->ts.replay && (pred->dirpred.tsbp->ts.head_table[key] != NULL)) {
-	 was_replay = TRUE;
-	 pred->replays++;
-	 ts_outcome = pred_taken;
-
-	 if (pred->dirpred.tsbp->ts.enabled && (pred->dirpred.tsbp->ts.correctness_buffer[pred->dirpred.tsbp->ts.head_table[key]] == 0)) {
-	    base_outcome = !pred_taken;
-	    was_inverted = TRUE;
-	 } else {
-            base_outcome = pred_taken;
-         }
-
-	 if (!!ts_outcome != !!taken) {
-	    pred->dirpred.tsbp->ts.replay = FALSE;
-         }
-      } else {
-         base_outcome = pred_taken;
-      }
+			if (!!ts_outcome != !!taken) {
+				pred->dirpred.tsbp->ts.replay = FALSE;
+			}
+		} else {
+			base_outcome = pred_taken;
+		}
+		
+		/*determine if actual outcome (taken) of predicted direction is correct and update correctness buffer*/
+		pred->dirpred.tsbp->ts.correctness_buffer[pred->dirpred.tsbp->ts.tail] = (!!base_outcome == !!taken);  /*1 = base predictor correct. 0 = prediction incorrect*/
       
-      /* incr tail but prevent from going out of bounds*/
-      //if (pred->dirpred.tsbp->ts.tail >= pred->dirpred.tsbp->ts.correctness_width) {
-	//  pred->dirpred.tsbp->ts.tail = 0;
-      //} else {
-	//  pred->dirpred.tsbp->ts.tail++;
-      //}
+		/*if incorrect base prediction, update head table*/
+		if (!!base_outcome != !!taken) {
+			if(!pred->dirpred.tsbp->ts.replay) { /*if not in replay mode, update head and set replay flag*/
+				pred->dirpred.tsbp->ts.replay = TRUE;
+			}
+		}
 
-      /*determine if actual outcome (taken) of predicted direction is correct and update correctness buffer*/
-      pred->dirpred.tsbp->ts.correctness_buffer[pred->dirpred.tsbp->ts.tail] = (!!base_outcome == !!taken);  /*1 = base predictor correct. 0 = prediction incorrect*/
+		pred->dirpred.tsbp->ts.head_table[key] = pred->dirpred.tsbp->ts.tail;   //else update head table
+
+		/* incr tail but prevent from going out of bounds*/
+		if (pred->dirpred.tsbp->ts.tail >= pred->dirpred.tsbp->ts.correctness_width) {
+			pred->dirpred.tsbp->ts.tail = 0;
+		} else {
+			pred->dirpred.tsbp->ts.tail++;
+		}
+	}
+  
+  /***********************IF MBP update L1 table as above, also update correctness history table*****************************/
+	if ((MD_OP_FLAGS(op) & (F_CTRL|F_UNCOND)) != (F_CTRL|F_UNCOND) && (pred->class == BPredTSBP)) {
+		int l1index, shift_reg;
+		
+		/* update L1 table, same as 2lev/comb predictors above this */
+		l1index = (baddr >> MD_BR_SHIFT) & (pred->dirpred.twolev->config.two.l1size - 1);
+		shift_reg = (pred->dirpred.twolev->config.two.shiftregs[l1index] << 1) | (!!taken);
+		pred->dirpred.twolev->config.two.shiftregs[l1index] = shift_reg & ((1 << pred->dirpred.twolev->config.two.shift_width) - 1);
+
+		int base_outcome;
+		int ts_outcome;
+		//unsigned int key;  /*added typedef in tsbp.h file*/
       
-      /*if incorrect base prediction, update head table*/
-      if (!!base_outcome != !!taken)
-      {
-        /*create key concatenating current PC and global history bits*/
-        //int i;
-        //key = (unsigned int)baddr; // & ( <<  pred->dirpred.twolev->config.two.shift_width); /*shift PC by L1 width of L1 global history reg*/
-        //for (i = 1; i < 6; i++) {
-	//  key = key | (pred->dirpred.twolev->config.two.shiftregs[pred->dirpred.twolev->config.two.shift_width-i] << i);
-	//}
+		int key = key_from_features (pred->dirpred.twolev, baddr); // Get unmasked key from GHR and PC
+			
+		key = key & (pred->dirpred.mbp->mbp.cht_size - 1); // mask key based on predictor table size
+		
+		/*Get previous machine state (CHT components)*/
+		md_addr_t address_mask, dst_pc, src_pc;
+		int valid, correct, replay;
+		
+		address_mask = ((1 << (sizeof(md_addr_t) * 8)) - 1);
+		//dst_pc = pred->dirpred.mbp->mbp.cht[key] & address_mask; // Get destination addr
+		//valid = (pred->dirpred.mbp->mbp.cht[key] >> (sizeof(md_addr_t) * 8)) & 1; //Get valid bit
+		correct = (pred->dirpred.mbp->mbp.cht[key] >> ((sizeof(md_addr_t) * 8) + 1)) & 1; //Get correctness bit
+		replay = (pred->dirpred.mbp->mbp.cht[key] >> ((sizeof(md_addr_t) * 8) + 2)) & 1; //Get replay bit
+		src_pc = (pred->dirpred.mbp->mbp.cht[key] >> ((sizeof(md_addr_t) * 8) + 3)) & address_mask; //Get source addr
 
-	//unsigned int key_mask = 0;
-	//for(i = 0; i < (pred->dirpred.twolev->config.two.shift_width + 3); i++){
-          //key_mask = key_mask | (1 << i); /*shift reg bit by i bits into key*/
-        //}
-	//key = key & key_mask;
-	
-        if(!pred->dirpred.tsbp->ts.replay) // && (pred->dirpred.tsbp->ts.head_table[key] != NULL))   /*if not in replay mode, update head and set replay flag*/
-          {
-            //pred->dirpred.tsbp->ts.head = pred->dirpred.tsbp->ts.head_table[key];
-            pred->dirpred.tsbp->ts.replay = TRUE;
-          }
+		bool just_disabled_replay = FALSE;
 
-        //pred->dirpred.tsbp->ts.head_table[key] = pred->dirpred.tsbp->ts.tail;   //else update head table
-      }
+		/*Set the base outcome; Also if in replay mode and ts_outcome is incorrect, turn off replay mode*/
+		if (replay && (src_pc == baddr)) {
+			pred->replays++;
+			ts_outcome = pred_taken;
 
-      pred->dirpred.tsbp->ts.head_table[key] = pred->dirpred.tsbp->ts.tail;   //else update head table
+			if (pred->dirpred.mbp->mbp.enabled && !correct) {
+				base_outcome = !pred_taken;
+			} else {
+				base_outcome = pred_taken;
+			}
 
-      /* incr tail but prevent from going out of bounds*/
-      if (pred->dirpred.tsbp->ts.tail >= pred->dirpred.tsbp->ts.correctness_width) {
-          pred->dirpred.tsbp->ts.tail = 0;
-      } else {
-          pred->dirpred.tsbp->ts.tail++;
-      }
-  }
+			if (!!ts_outcome != !!taken) {
+				replay = FALSE;
+				just_disabled_replay = TRUE;
+			}
+		} else {
+			base_outcome = pred_taken;
+		}
+		
+		/*determine if actual outcome (taken) of predicted direction is correct and update correctness bit*/
+		correct = (!!base_outcome == !!taken);  /*1 = base predictor correct. 0 = prediction incorrect*/
+		  
+		/*if not in replay mode and base outcome incorrect, set replay flag if not just un-set*/
+		if ((!!base_outcome != !!taken) && !replay && !just_disabled_replay) {
+				replay = TRUE;
+			}
+		}
+		
+		/* Update correctness history table */
+		dst_pc = btarget;
+		valid = 1;
+		src_pc = baddr;
+		
+		pred->dirpred.mbp->mbp.cht[key] = (src_pc << ((sizeof(md_addr_t) * 8) + 3))
+			| (replay << ((sizeof(md_addr_t) * 8) + 2))
+			| (correct << ((sizeof(md_addr_t) * 8) + 1))
+			| (valid << (sizeof(md_addr_t) * 8))
+			| dst_pc;
+	}
 
   /* find BTB entry if it's a taken branch (don't allocate for non-taken) */
   if (taken)
@@ -1205,19 +1305,14 @@ bpred_update(struct bpred_t *pred,	/* branch predictor instance */
    * matched-on entry or a victim which was LRU in its set)
    */
 
-  /* update state (but not for jumps) */
-  if (dir_update_ptr->pdir1)
-    { 
-        //if (was_replay && was_inverted) {
-        //   *dir_update_ptr->pdir1 = 3 - *dir_update_ptr->pdir1;
-        //}
-
+	/* update state (but not for jumps) */
+	if (dir_update_ptr->pdir1) {  
         if (taken) {
-          if (*dir_update_ptr->pdir1 < 3)
-            ++*dir_update_ptr->pdir1;
-        } else { /* not taken */
-          if (*dir_update_ptr->pdir1 > 0)
-            --*dir_update_ptr->pdir1;
+			if (*dir_update_ptr->pdir1 < 3)
+				++*dir_update_ptr->pdir1;
+		} else { /* not taken */
+			if (*dir_update_ptr->pdir1 > 0)
+				--*dir_update_ptr->pdir1;
         }
     }
 
