@@ -71,8 +71,8 @@ bpred_create(enum bpred_class class,	/* type of predictor to create */
 	     unsigned int meta_size,	/* meta table size */
 	     unsigned int shift_width,	/* history register width */
 	     unsigned int xor,  	/* history xor address flag */
-		 unsigned int head_table_width, /*TS head table width*/
-		 unsigned int cht_size, /*MBP correctness history table width*/
+     	     unsigned int head_table_width, /*TS head table width*/
+	     unsigned int cht_size, /*MBP correctness history table width*/
 	     unsigned int btb_sets,	/* number of sets in BTB */ 
 	     unsigned int btb_assoc,	/* BTB associativity */
 	     unsigned int retstack_size) /* num entries in ret-addr stack */
@@ -120,7 +120,7 @@ bpred_create(enum bpred_class class,	/* type of predictor to create */
       bpred_dir_create(BPred2Level, l1size, l2size, shift_width, xor);
 	
 	pred->dirpred.mbp =
-	  bpred_mbp_create(class, 1, cht_size);
+	  bpred_mbp_create(class, 0, cht_size);
     break;
 
   case BPred2bit:
@@ -141,6 +141,7 @@ bpred_create(enum bpred_class class,	/* type of predictor to create */
   case BPredComb:
   case BPred2Level:
   case BPredTSBP:
+  case BPredMBP:
   case BPred2bit:
     {
       int i;
@@ -360,7 +361,7 @@ bpred_mbp_create (
   unsigned int cht_size)			/* Correctness History Table size */
 {
   struct bpred_mbp_t *pred_mbp;
-  unsigned int key;
+  //unsigned int key;
   
   if (!(pred_mbp = calloc(1, sizeof(struct bpred_mbp_t))))
     fatal("out of virtual memory");
@@ -372,14 +373,14 @@ bpred_mbp_create (
   
   pred_mbp->mbp.cht_size = cht_size;
   
-  pred_mbp->mbp.cht = calloc(cht_size, ((sizeof(unsigned int) * 2) + 1)); /* Need to allocate for source key, source PC, replay bit, correctness bit, valid bit, and destination PC*/
+  pred_mbp->mbp.cht = calloc(cht_size, ((sizeof(md_addr_t) * 2) + 1)); /* Need to allocate for source key, source PC, replay bit, correctness bit, valid bit, and destination PC*/
   
   if (!pred_mbp->mbp.cht)
 	fatal("cannot allocate correctness history table");
 
   /* initializing correctness history table entries to 0*/
-  for (key = 0; key < cht_size; key++)
-	  pred_mbp->mbp.cht[key] = 0;
+  //for (key = 0; key < cht_size; key++)
+//	  pred_mbp->mbp.cht[key] = 0;
 
   /* initialize enabled flag */
   if (mbp_enabled == 0)
@@ -765,7 +766,6 @@ bpred_lookup(struct bpred_t *pred,	/* branch predictor instance */
 {
   struct bpred_btb_ent_t *pbtb = NULL;
   int index, i;
-  char base_outcome;
   bool_t invert = FALSE;
 
   if (!dir_update_ptr)
@@ -844,12 +844,12 @@ bpred_lookup(struct bpred_t *pred,	/* branch predictor instance */
 			md_addr_t address_mask, dst_pc, src_pc;
 			int valid, correct, replay;
 			
-			address_mask = ((1 << (sizeof(md_addr_t) * 8)) - 1);
+			address_mask = (((unsigned long long)1 << sizeof(md_addr_t)) - 1);
 			//dst_pc = pred->dirpred.mbp->mbp.cht[key] & address_mask; // Get destination addr
 			//valid = (pred->dirpred.mbp->mbp.cht[key] >> (sizeof(md_addr_t) * 8)) & 1; //Get valid bit
-			correct = (pred->dirpred.mbp->mbp.cht[key] >> ((sizeof(md_addr_t) * 8) + 1)) & 1; //Get correctness bit
-			replay = (pred->dirpred.mbp->mbp.cht[key] >> ((sizeof(md_addr_t) * 8) + 2)) & 1; //Get replay bit
-			src_pc = (pred->dirpred.mbp->mbp.cht[key] >> ((sizeof(md_addr_t) * 8) + 3)) & address_mask; //Get source addr
+			correct = (pred->dirpred.mbp->mbp.cht[key] >> (sizeof(md_addr_t) + 1)) & 1; //Get correctness bit
+			replay = (pred->dirpred.mbp->mbp.cht[key] >> (sizeof(md_addr_t) + 2)) & 1; //Get replay bit
+			src_pc = (pred->dirpred.mbp->mbp.cht[key] >> (sizeof(md_addr_t) + 3)) & address_mask; //Get source addr
 			
 			/*if enabled, replay bit set, correctness bits is 0, and src_pc matches baddr predictor is inverted*/
 			if (pred->dirpred.mbp->mbp.enabled && replay && !correct && (src_pc == baddr)) {
@@ -1019,9 +1019,7 @@ bpred_update(struct bpred_t *pred,	/* branch predictor instance */
   struct bpred_btb_ent_t *pbtb = NULL;
   struct bpred_btb_ent_t *lruhead = NULL, *lruitem = NULL;
   int index, i;
-  unsigned int head;
-  bool_t was_inverted = FALSE;
-
+  
   /* don't change bpred state for non-branch instructions or if this
    * is a stateless predictor*/
   if (!(MD_OP_FLAGS(op) & F_CTRL))
@@ -1132,7 +1130,6 @@ bpred_update(struct bpred_t *pred,	/* branch predictor instance */
 
 			if (pred->dirpred.tsbp->ts.enabled && (pred->dirpred.tsbp->ts.correctness_buffer[pred->dirpred.tsbp->ts.head_table[key]] == 0)) {
 				base_outcome = !pred_taken;
-				was_inverted = TRUE;
 			} else {
 				base_outcome = pred_taken;
 			}
@@ -1165,7 +1162,7 @@ bpred_update(struct bpred_t *pred,	/* branch predictor instance */
 	}
   
   /***********************IF MBP update L1 table as above, also update correctness history table*****************************/
-	if ((MD_OP_FLAGS(op) & (F_CTRL|F_UNCOND)) != (F_CTRL|F_UNCOND) && (pred->class == BPredTSBP)) {
+	if ((MD_OP_FLAGS(op) & (F_CTRL|F_UNCOND)) != (F_CTRL|F_UNCOND) && (pred->class == BPredMBP)) {
 		int l1index, shift_reg;
 		
 		/* update L1 table, same as 2lev/comb predictors above this */
@@ -1185,14 +1182,14 @@ bpred_update(struct bpred_t *pred,	/* branch predictor instance */
 		md_addr_t address_mask, dst_pc, src_pc;
 		int valid, correct, replay;
 		
-		address_mask = ((1 << (sizeof(md_addr_t) * 8)) - 1);
+		address_mask = (((unsigned long long)1 << sizeof(md_addr_t)) - 1);
 		//dst_pc = pred->dirpred.mbp->mbp.cht[key] & address_mask; // Get destination addr
 		//valid = (pred->dirpred.mbp->mbp.cht[key] >> (sizeof(md_addr_t) * 8)) & 1; //Get valid bit
-		correct = (pred->dirpred.mbp->mbp.cht[key] >> ((sizeof(md_addr_t) * 8) + 1)) & 1; //Get correctness bit
-		replay = (pred->dirpred.mbp->mbp.cht[key] >> ((sizeof(md_addr_t) * 8) + 2)) & 1; //Get replay bit
-		src_pc = (pred->dirpred.mbp->mbp.cht[key] >> ((sizeof(md_addr_t) * 8) + 3)) & address_mask; //Get source addr
+		correct = (pred->dirpred.mbp->mbp.cht[key] >> (sizeof(md_addr_t) + 1)) & 1; //Get correctness bit
+		replay = (pred->dirpred.mbp->mbp.cht[key] >> (sizeof(md_addr_t) + 2)) & 1; //Get replay bit
+		src_pc = (pred->dirpred.mbp->mbp.cht[key] >> (sizeof(md_addr_t) + 3)) & address_mask; //Get source addr
 
-		bool just_disabled_replay = FALSE;
+		bool_t just_disabled_replay = FALSE;
 
 		/*Set the base outcome; Also if in replay mode and ts_outcome is incorrect, turn off replay mode*/
 		if (replay && (src_pc == baddr)) {
@@ -1218,8 +1215,7 @@ bpred_update(struct bpred_t *pred,	/* branch predictor instance */
 		  
 		/*if not in replay mode and base outcome incorrect, set replay flag if not just un-set*/
 		if ((!!base_outcome != !!taken) && !replay && !just_disabled_replay) {
-				replay = TRUE;
-			}
+			replay = TRUE;
 		}
 		
 		/* Update correctness history table */
@@ -1227,10 +1223,10 @@ bpred_update(struct bpred_t *pred,	/* branch predictor instance */
 		valid = 1;
 		src_pc = baddr;
 		
-		pred->dirpred.mbp->mbp.cht[key] = (src_pc << ((sizeof(md_addr_t) * 8) + 3))
-			| (replay << ((sizeof(md_addr_t) * 8) + 2))
-			| (correct << ((sizeof(md_addr_t) * 8) + 1))
-			| (valid << (sizeof(md_addr_t) * 8))
+		pred->dirpred.mbp->mbp.cht[key] = ((unsigned long long)src_pc << (sizeof(md_addr_t) + 3))
+			| ((unsigned long long)replay << (sizeof(md_addr_t) + 2))
+			| ((unsigned long long)correct << (sizeof(md_addr_t) + 1))
+			| ((unsigned long long)valid << sizeof(md_addr_t))
 			| dst_pc;
 	}
 

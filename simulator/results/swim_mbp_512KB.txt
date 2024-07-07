@@ -1,0 +1,13 @@
+reading benchmark database ./bench.db
+Doing swim
+Installing swim
+ln -s /home/greggbyr/common/Documents/MBP_ReCISC/simulator/bench/little/swim.ss run.swim
+Pre-run swim
+cp /home/greggbyr/common/Documents/MBP_ReCISC/simulator/input/ref/swim.* .
+cp: cannot stat '/home/greggbyr/common/Documents/MBP_ReCISC/simulator/input/ref/swim.*': No such file or directory
+Run swim
+/home/greggbyr/common/Documents/MBP_ReCISC/simulator/ss3/sim-outorder -max:inst 10000000 -bpred mbp -bpred:mbp 1 524288 19 1 524288 run.swim  < swim.in > swim.out
+sh: 1: cannot open swim.in: No such file
+****** program returns ERROR 512
+Post-run swim
+rm -f -r swim.*

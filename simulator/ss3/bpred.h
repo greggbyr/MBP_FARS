@@ -230,7 +230,8 @@ bpred_create(enum bpred_class class,	/* type of predictor to create */
 	     unsigned int meta_size,	/* meta predictor table size */
 	     unsigned int shift_width,	/* history register width */
 	     unsigned int xor,		/* history xor address flag */
-       unsigned int head_table_width, /*TS head table width*/
+       	     unsigned int head_table_width, /*TS head table width*/
+	     unsigned int cht_size,	 /*MBP correctness history table size*/
 	     unsigned int btb_sets,	/* number of sets in BTB */ 
 	     unsigned int btb_assoc,	/* BTB associativity */
 	     unsigned int retstack_size);/* num entries in ret-addr stack */
