@@ -1,0 +1,13 @@
+reading benchmark database ./bench.db
+Doing turb3d
+Installing turb3d
+ln -s /home/greggbyr/common/Documents/MBP_ReCISC/simulator/bench/little/turb3d.ss run.turb3d
+Pre-run turb3d
+cp /home/greggbyr/common/Documents/MBP_ReCISC/simulator/input/ref/turb3d.* .
+cp: cannot stat '/home/greggbyr/common/Documents/MBP_ReCISC/simulator/input/ref/turb3d.*': No such file or directory
+Run turb3d
+/home/greggbyr/common/Documents/MBP_ReCISC/simulator/ss3/sim-outorder -max:inst 10000000 -bpred mbp -bpred:mbp 1 65536 16 1 65536 run.turb3d  < turb3d.in > turb3d.out
+sh: 1: cannot open turb3d.in: No such file
+****** program returns ERROR 512
+Post-run turb3d
+rm -f -r turb3d.*
