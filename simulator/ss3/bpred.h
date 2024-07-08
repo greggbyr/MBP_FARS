@@ -160,7 +160,11 @@ struct bpred_mbp_t {
   struct {
     unsigned int cht_size;				/* correctness history table size, number of table entries */
 	bool_t enabled;						/* MBP Enabled flag */
-	unsigned int *cht;					/* Correctness history table*/
+	md_addr_t *cht_spc;					/* Correctness history table source pc bits*/
+	bool_t *cht_replay;					/* Correctness history table replay bits*/
+	bool_t *cht_correct;				/* Correctness history table correct bits*/
+	bool_t *cht_valid;					/* Correctness history table valid bits*/
+	md_addr_t *cht_dpc;					/* Correctness history table destination pc bits*/
   } mbp;
 };
 

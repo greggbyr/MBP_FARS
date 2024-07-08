@@ -373,14 +373,31 @@ bpred_mbp_create (
   
   pred_mbp->mbp.cht_size = cht_size;
   
-  pred_mbp->mbp.cht = calloc(cht_size, ((sizeof(md_addr_t) * 2) + 1)); /* Need to allocate for source key, source PC, replay bit, correctness bit, valid bit, and destination PC*/
+  /* Need to allocate for source PC, replay bit, correctness bit, valid bit, and destination PC*/
+  pred_mbp->mbp.cht_spc = calloc(cht_size, sizeof(md_addr_t)); 
   
-  if (!pred_mbp->mbp.cht)
-	fatal("cannot allocate correctness history table");
+  if (!pred_mbp->mbp.cht_spc)
+	fatal("cannot allocate correctness history table source pc bits");
 
-  /* initializing correctness history table entries to 0*/
-  //for (key = 0; key < cht_size; key++)
-//	  pred_mbp->mbp.cht[key] = 0;
+  pred_mbp->mbp.cht_replay = calloc(cht_size, sizeof(bool_t)); 
+  
+  if (!pred_mbp->mbp.cht_replay)
+	fatal("cannot allocate correctness history table replay bits");
+
+  pred_mbp->mbp.cht_correct = calloc(cht_size, sizeof(bool_t)); 
+  
+  if (!pred_mbp->mbp.cht_correct)
+	fatal("cannot allocate correctness history table correct bits");
+
+  pred_mbp->mbp.cht_valid = calloc(cht_size, sizeof(bool_t)); 
+  
+  if (!pred_mbp->mbp.cht_valid)
+	fatal("cannot allocate correctness history table valid bits");
+
+  pred_mbp->mbp.cht_dpc = calloc(cht_size, sizeof(md_addr_t)); 
+  
+  if (!pred_mbp->mbp.cht_dpc)
+	fatal("cannot allocate correctness history table destination pc bits");
 
   /* initialize enabled flag */
   if (mbp_enabled == 0)
@@ -821,12 +838,18 @@ bpred_lookup(struct bpred_t *pred,	/* branch predictor instance */
 			int key = key_from_features (pred->dirpred.twolev, baddr); // Get unmasked key from GHR and PC
 			
 			key = key & (pred->dirpred.tsbp->ts.head_table_size - 1); // mask key based on predictor table size
+			
+			/* incr head but prevent from going out of bounds*/
+			if (pred->dirpred.tsbp->ts.head >= pred->dirpred.tsbp->ts.correctness_width) {
+				pred->dirpred.tsbp->ts.head = 0;
+			} else {
+				pred->dirpred.tsbp->ts.head++;
+			}
 
 			/*if in replay mode and corretness buffer head indicates base predictor mistake*/
 			if(pred->dirpred.tsbp->ts.replay 
-				&& (pred->dirpred.tsbp->ts.head_table[key] != NULL)
 				&& pred->dirpred.tsbp->ts.enabled 
-				&& (pred->dirpred.tsbp->ts.correctness_buffer[pred->dirpred.tsbp->ts.head_table[key]] == 0)) {
+				&& (pred->dirpred.tsbp->ts.correctness_buffer[pred->dirpred.tsbp->ts.head] == 0)) {
                 invert = TRUE; 
 			}
 		}
@@ -840,19 +863,11 @@ bpred_lookup(struct bpred_t *pred,	/* branch predictor instance */
 			
 			key = key & (pred->dirpred.mbp->mbp.cht_size - 1); // mask key based on predictor table size
 
-			/* Get CHT components */
-			md_addr_t address_mask, dst_pc, src_pc;
-			int valid, correct, replay;
-			
-			address_mask = (((unsigned long long)1 << sizeof(md_addr_t)) - 1);
-			//dst_pc = pred->dirpred.mbp->mbp.cht[key] & address_mask; // Get destination addr
-			//valid = (pred->dirpred.mbp->mbp.cht[key] >> (sizeof(md_addr_t) * 8)) & 1; //Get valid bit
-			correct = (pred->dirpred.mbp->mbp.cht[key] >> (sizeof(md_addr_t) + 1)) & 1; //Get correctness bit
-			replay = (pred->dirpred.mbp->mbp.cht[key] >> (sizeof(md_addr_t) + 2)) & 1; //Get replay bit
-			src_pc = (pred->dirpred.mbp->mbp.cht[key] >> (sizeof(md_addr_t) + 3)) & address_mask; //Get source addr
-			
 			/*if enabled, replay bit set, correctness bits is 0, and src_pc matches baddr predictor is inverted*/
-			if (pred->dirpred.mbp->mbp.enabled && replay && !correct && (src_pc == baddr)) {
+			if (pred->dirpred.mbp->mbp.enabled 
+				&& pred->dirpred.mbp->mbp.cht_replay[key] 				// Only perform correction if replay is on
+				&& !pred->dirpred.mbp->mbp.cht_correct[key] 			// Check for past correctness history
+				&& (pred->dirpred.mbp->mbp.cht_spc[key] == baddr)) { 	// Check stored source pc is same as baddr
 				invert = TRUE; 
 			}
 		}
@@ -1124,11 +1139,11 @@ bpred_update(struct bpred_t *pred,	/* branch predictor instance */
 		key = key & (pred->dirpred.tsbp->ts.head_table_size - 1); // mask key based on predictor table size
 		
 		/*Set the base outcome; Also if in replay mode and ts_outcome is incorrect, turn off replay mode*/
-		if (pred->dirpred.tsbp->ts.replay && (pred->dirpred.tsbp->ts.head_table[key] != NULL)) {
+		if (pred->dirpred.tsbp->ts.replay) {
 			pred->replays++;
 			ts_outcome = pred_taken;
 
-			if (pred->dirpred.tsbp->ts.enabled && (pred->dirpred.tsbp->ts.correctness_buffer[pred->dirpred.tsbp->ts.head_table[key]] == 0)) {
+			if (pred->dirpred.tsbp->ts.enabled && (pred->dirpred.tsbp->ts.correctness_buffer[pred->dirpred.tsbp->ts.head] == 0)) {
 				base_outcome = !pred_taken;
 			} else {
 				base_outcome = pred_taken;
@@ -1141,24 +1156,25 @@ bpred_update(struct bpred_t *pred,	/* branch predictor instance */
 			base_outcome = pred_taken;
 		}
 		
-		/*determine if actual outcome (taken) of predicted direction is correct and update correctness buffer*/
-		pred->dirpred.tsbp->ts.correctness_buffer[pred->dirpred.tsbp->ts.tail] = (!!base_outcome == !!taken);  /*1 = base predictor correct. 0 = prediction incorrect*/
-      
-		/*if incorrect base prediction, update head table*/
-		if (!!base_outcome != !!taken) {
-			if(!pred->dirpred.tsbp->ts.replay) { /*if not in replay mode, update head and set replay flag*/
-				pred->dirpred.tsbp->ts.replay = TRUE;
-			}
-		}
-
-		pred->dirpred.tsbp->ts.head_table[key] = pred->dirpred.tsbp->ts.tail;   //else update head table
-
 		/* incr tail but prevent from going out of bounds*/
 		if (pred->dirpred.tsbp->ts.tail >= pred->dirpred.tsbp->ts.correctness_width) {
 			pred->dirpred.tsbp->ts.tail = 0;
 		} else {
 			pred->dirpred.tsbp->ts.tail++;
 		}
+		
+		/*determine if actual outcome (taken) of predicted direction is correct and update correctness buffer*/
+		pred->dirpred.tsbp->ts.correctness_buffer[pred->dirpred.tsbp->ts.tail] = (!!base_outcome == !!taken);  /*1 = base predictor correct. 0 = prediction incorrect*/
+      
+		/*if incorrect base prediction, update head table*/
+		if (!!base_outcome != !!taken) {
+			if(!pred->dirpred.tsbp->ts.replay && pred->dirpred.tsbp->ts.head_table[key]] != NULL) { /*if not in replay mode, update head and set replay flag*/
+				pred->dirpred.tsbp->ts.head = pred->dirpred.tsbp->ts.head_table[key]];
+				pred->dirpred.tsbp->ts.replay = TRUE;
+			}
+		}
+
+		pred->dirpred.tsbp->ts.head_table[key] = pred->dirpred.tsbp->ts.tail;   //else update head table
 	}
   
   /***********************IF MBP update L1 table as above, also update correctness history table*****************************/
@@ -1171,39 +1187,27 @@ bpred_update(struct bpred_t *pred,	/* branch predictor instance */
 		pred->dirpred.twolev->config.two.shiftregs[l1index] = shift_reg & ((1 << pred->dirpred.twolev->config.two.shift_width) - 1);
 
 		int base_outcome;
-		int ts_outcome;
-		//unsigned int key;  /*added typedef in tsbp.h file*/
-      
+		int mbp_outcome;
+		
 		int key = key_from_features (pred->dirpred.twolev, baddr); // Get unmasked key from GHR and PC
 			
 		key = key & (pred->dirpred.mbp->mbp.cht_size - 1); // mask key based on predictor table size
 		
-		/*Get previous machine state (CHT components)*/
-		md_addr_t address_mask, dst_pc, src_pc;
-		int valid, correct, replay;
-		
-		address_mask = (((unsigned long long)1 << sizeof(md_addr_t)) - 1);
-		//dst_pc = pred->dirpred.mbp->mbp.cht[key] & address_mask; // Get destination addr
-		//valid = (pred->dirpred.mbp->mbp.cht[key] >> (sizeof(md_addr_t) * 8)) & 1; //Get valid bit
-		correct = (pred->dirpred.mbp->mbp.cht[key] >> (sizeof(md_addr_t) + 1)) & 1; //Get correctness bit
-		replay = (pred->dirpred.mbp->mbp.cht[key] >> (sizeof(md_addr_t) + 2)) & 1; //Get replay bit
-		src_pc = (pred->dirpred.mbp->mbp.cht[key] >> (sizeof(md_addr_t) + 3)) & address_mask; //Get source addr
-
 		bool_t just_disabled_replay = FALSE;
 
-		/*Set the base outcome; Also if in replay mode and ts_outcome is incorrect, turn off replay mode*/
-		if (replay && (src_pc == baddr)) {
+		/*Set the base outcome; Also if in replay mode and mbp_outcome is incorrect, turn off replay mode*/
+		if (pred->dirpred.mbp->mbp.cht_replay[key] && (pred->dirpred.mbp->mbp.cht_spc[key] == baddr)) {
 			pred->replays++;
-			ts_outcome = pred_taken;
+			mbp_outcome = pred_taken;
 
-			if (pred->dirpred.mbp->mbp.enabled && !correct) {
+			if (pred->dirpred.mbp->mbp.enabled && !pred->dirpred.mbp->mbp.cht_correct[key]) {
 				base_outcome = !pred_taken;
 			} else {
 				base_outcome = pred_taken;
 			}
 
-			if (!!ts_outcome != !!taken) {
-				replay = FALSE;
+			if (!!mbp_outcome != !!taken) {
+				pred->dirpred.mbp->mbp.cht_replay[key] = FALSE;
 				just_disabled_replay = TRUE;
 			}
 		} else {
@@ -1211,23 +1215,17 @@ bpred_update(struct bpred_t *pred,	/* branch predictor instance */
 		}
 		
 		/*determine if actual outcome (taken) of predicted direction is correct and update correctness bit*/
-		correct = (!!base_outcome == !!taken);  /*1 = base predictor correct. 0 = prediction incorrect*/
+		pred->dirpred.mbp->mbp.cht_correct[key] = (!!base_outcome == !!taken);  /*1 = base predictor correct. 0 = prediction incorrect*/
 		  
-		/*if not in replay mode and base outcome incorrect, set replay flag if not just un-set*/
-		if ((!!base_outcome != !!taken) && !replay && !just_disabled_replay) {
-			replay = TRUE;
+		/*if not in replay mode and base outcome incorrect, set replay flag as long as it wasn't just disabled*/
+		if ((!!base_outcome != !!taken) && !pred->dirpred.mbp->mbp.cht_replay[key] && !just_disabled_replay) {
+			pred->dirpred.mbp->mbp.cht_replay[key] = TRUE;
 		}
 		
-		/* Update correctness history table */
-		dst_pc = btarget;
-		valid = 1;
-		src_pc = baddr;
-		
-		pred->dirpred.mbp->mbp.cht[key] = ((unsigned long long)src_pc << (sizeof(md_addr_t) + 3))
-			| ((unsigned long long)replay << (sizeof(md_addr_t) + 2))
-			| ((unsigned long long)correct << (sizeof(md_addr_t) + 1))
-			| ((unsigned long long)valid << sizeof(md_addr_t))
-			| dst_pc;
+		/* Update other correctness history table bits */
+		pred->dirpred.mbp->mbp.cht_dpc[key] = btarget;
+		pred->dirpred.mbp->mbp.cht_valid[key] = TRUE;
+		pred->dirpred.mbp->mbp.cht_spc[key] = baddr;
 	}
 
   /* find BTB entry if it's a taken branch (don't allocate for non-taken) */
