@@ -120,7 +120,7 @@ bpred_create(enum bpred_class class,	/* type of predictor to create */
       bpred_dir_create(BPred2Level, l1size, l2size, shift_width, xor);
 	
 	pred->dirpred.mbp =
-	  bpred_mbp_create(class, 0, cht_size);
+	  bpred_mbp_create(class, 1, cht_size);
     break;
 
   case BPred2bit:
@@ -1168,8 +1168,8 @@ bpred_update(struct bpred_t *pred,	/* branch predictor instance */
       
 		/*if incorrect base prediction, update head table*/
 		if (!!base_outcome != !!taken) {
-			if(!pred->dirpred.tsbp->ts.replay && pred->dirpred.tsbp->ts.head_table[key]] != NULL) { /*if not in replay mode, update head and set replay flag*/
-				pred->dirpred.tsbp->ts.head = pred->dirpred.tsbp->ts.head_table[key]];
+			if(!pred->dirpred.tsbp->ts.replay && pred->dirpred.tsbp->ts.head_table[key] != NULL) { /*if not in replay mode, update head and set replay flag*/
+				pred->dirpred.tsbp->ts.head = pred->dirpred.tsbp->ts.head_table[key];
 				pred->dirpred.tsbp->ts.replay = TRUE;
 			}
 		}
