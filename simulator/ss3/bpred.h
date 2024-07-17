@@ -202,7 +202,7 @@ struct bpred_t {
   counter_t jr_non_ras_hits;	/* num correct addr-preds for non-RAS JR's */
   counter_t jr_non_ras_seen;	/* num non-RAS JR's seen */
   counter_t misses;		/* num incorrect predictions */
-
+  
   counter_t lookups;		/* num lookups */
 
   counter_t replays;	        /* num of replays */
@@ -210,6 +210,26 @@ struct bpred_t {
   counter_t retstack_pops;	/* number of times a value was popped */
   counter_t retstack_pushes;	/* number of times a value was pushed */
   counter_t ras_hits;		/* num correct return-address predictions */
+  
+  /* reverse stats */
+  counter_t reverse_addr_hits;		/* num correct addr-predictions */
+  counter_t reverse_dir_hits;		/* num correct dir-predictions (incl addr) */
+  counter_t reverse_used_ras;		/* num RAS predictions used */
+  counter_t reverse_used_bimod;		/* num bimodal predictions used (BPredComb) */
+  counter_t reverse_used_2lev;		/* num 2-level predictions used (BPredComb) */
+  counter_t reverse_jr_hits;		/* num correct addr-predictions for JR's */
+  counter_t reverse_jr_seen;		/* num JR's seen */
+  counter_t reverse_jr_non_ras_hits;	/* num correct addr-preds for non-RAS JR's */
+  counter_t reverse_jr_non_ras_seen;	/* num non-RAS JR's seen */
+  counter_t reverse_misses;		/* num incorrect reverse predictions */
+
+  counter_t reverse_lookups;		/* num lookups */
+
+  counter_t reverse_replays;	        /* num of replays */
+
+  counter_t reverse_retstack_pops;	/* number of times a value was popped */
+  counter_t reverse_retstack_pushes;	/* number of times a value was pushed */
+  counter_t reverse_ras_hits;		/* num correct return-address predictions */
 };
 
 /* branch predictor update information */

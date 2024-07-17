@@ -542,10 +542,17 @@ void
 bpred_stats(struct bpred_t *pred,	/* branch predictor instance */
 	    FILE *stream)		/* output stream */
 {
+	/* stats */
   fprintf(stream, "pred: addr-prediction rate = %f\n",
 	  (double)pred->addr_hits/(double)(pred->addr_hits+pred->misses));
   fprintf(stream, "pred: dir-prediction rate = %f\n",
 	  (double)pred->dir_hits/(double)(pred->dir_hits+pred->misses));
+  
+	/* reverse stats */
+  fprintf(stream, "pred: reverse addr-prediction rate = %f\n",
+	  (double)pred->reverse_addr_hits/(double)(pred->reverse_addr_hits+pred->reverse_misses));
+  fprintf(stream, "pred: reverse dir-prediction rate = %f\n",
+	  (double)pred->reverse_dir_hits/(double)(pred->reverse_dir_hits+pred->reverse_misses));
 }
 
 /* register branch predictor stats */
@@ -671,6 +678,98 @@ bpred_reg_stats(struct bpred_t *pred,	/* branch predictor instance */
   stat_reg_formula(sdb, buf,
 		   "RAS prediction rate (i.e., RAS hits/used RAS)",
 		   buf1, "%9.4f");
+		   
+		   
+		  /*  Reverse Data Sets */
+		   
+  sprintf(buf, "%s.reverse_lookups", name);
+  stat_reg_counter(sdb, buf, "total number of reverse bpred lookups",
+		   &pred->reverse_lookups, 0, NULL);
+  sprintf(buf, "%s.reverse_updates", name);
+  sprintf(buf1, "%s.reverse_dir_hits + %s.reverse_misses", name, name);
+  stat_reg_formula(sdb, buf, "total number of reverse updates", buf1, "%12.0f");
+  sprintf(buf, "%s.reverse_addr_hits", name);
+  stat_reg_counter(sdb, buf, "total number of reverse address-predicted hits", 
+		   &pred->reverse_addr_hits, 0, NULL);
+  sprintf(buf, "%s.reverse_dir_hits", name);
+  stat_reg_counter(sdb, buf, 
+		   "total number of reverse direction-predicted hits "
+		   "(includes addr-hits)", 
+		   &pred->reverse_dir_hits, 0, NULL);
+  if (pred->class == BPredComb)
+    {
+      sprintf(buf, "%s.reverse_used_bimod", name);
+      stat_reg_counter(sdb, buf, 
+		       "total number of reverse bimodal predictions used", 
+		       &pred->reverse_used_bimod, 0, NULL);
+      sprintf(buf, "%s.reverse_used_2lev", name);
+      stat_reg_counter(sdb, buf, 
+		       "total number of reverse 2-level predictions used", 
+		       &pred->reverse_used_2lev, 0, NULL);
+    }
+  if (pred->class == BPredTSBP || pred->class == BPredMBP) {
+       sprintf(buf, "%s.reverse_replays", name);
+       stat_reg_counter(sdb, buf, "total number of reverse replays", &pred->reverse_replays, 0, NULL);
+  }
+  sprintf(buf, "%s.reverse_misses", name);
+  stat_reg_counter(sdb, buf, "total number of reverse misses", &pred->reverse_misses, 0, NULL);
+  sprintf(buf, "%s.reverse_jr_hits", name);
+  stat_reg_counter(sdb, buf,
+		   "total number of reverse address-predicted hits for JR's",
+		   &pred->reverse_jr_hits, 0, NULL);
+  sprintf(buf, "%s.reverse_jr_seen", name);
+  stat_reg_counter(sdb, buf,
+		   "total number of reverse JR's seen",
+		   &pred->reverse_jr_seen, 0, NULL);
+  sprintf(buf, "%s.reverse_jr_non_ras_hits.PP", name);
+  stat_reg_counter(sdb, buf,
+		   "total number of reverse address-predicted hits for non-RAS JR's",
+		   &pred->reverse_jr_non_ras_hits, 0, NULL);
+  sprintf(buf, "%s.reverse_jr_non_ras_seen.PP", name);
+  stat_reg_counter(sdb, buf,
+		   "total number of reverse non-RAS JR's seen",
+		   &pred->reverse_jr_non_ras_seen, 0, NULL);
+  sprintf(buf, "%s.reverse_bpred_addr_rate", name);
+  sprintf(buf1, "%s.reverse_addr_hits / %s.reverse_updates", name, name);
+  stat_reg_formula(sdb, buf,
+		   "branch address-prediction rate (i.e., addr-hits/updates)",
+		   buf1, "%9.4f");
+  sprintf(buf, "%s.reverse_bpred_dir_rate", name);
+  sprintf(buf1, "%s.reverse_dir_hits / %s.reverse_updates", name, name);
+  stat_reg_formula(sdb, buf,
+		  "branch direction-prediction rate (i.e., all-hits/updates)",
+		  buf1, "%9.4f");
+  sprintf(buf, "%s.reverse_bpred_jr_rate", name);
+  sprintf(buf1, "%s.reverse_jr_hits / %s.reverse_jr_seen", name, name);
+  stat_reg_formula(sdb, buf,
+		  "JR address-prediction rate (i.e., JR addr-hits/JRs seen)",
+		  buf1, "%9.4f");
+  sprintf(buf, "%s.reverse_bpred_jr_non_ras_rate.PP", name);
+  sprintf(buf1, "%s.reverse_jr_non_ras_hits.PP / %s.reverse_jr_non_ras_seen.PP", name, name);
+  stat_reg_formula(sdb, buf,
+		   "non-RAS JR addr-pred rate (ie, non-RAS JR hits/JRs seen)",
+		   buf1, "%9.4f");
+  sprintf(buf, "%s.reverse_retstack_pushes", name);
+  stat_reg_counter(sdb, buf,
+		   "total number of reverse address pushed onto ret-addr stack",
+		   &pred->reverse_retstack_pushes, 0, NULL);
+  sprintf(buf, "%s.reverse_retstack_pops", name);
+  stat_reg_counter(sdb, buf,
+		   "total number of reverse address popped off of ret-addr stack",
+		   &pred->reverse_retstack_pops, 0, NULL);
+  sprintf(buf, "%s.reverse_used_ras.PP", name);
+  stat_reg_counter(sdb, buf,
+		   "total number of reverse RAS predictions used",
+		   &pred->reverse_used_ras, 0, NULL);
+  sprintf(buf, "%s.reverse_ras_hits.PP", name);
+  stat_reg_counter(sdb, buf,
+		   "total number of reverse RAS hits",
+		   &pred->reverse_ras_hits, 0, NULL);
+  sprintf(buf, "%s.reverse_ras_rate.PP", name);
+  sprintf(buf1, "%s.reverse_ras_hits.PP / %s.reverse_used_ras.PP", name, name);
+  stat_reg_formula(sdb, buf,
+		   "RAS prediction rate (i.e., RAS hits/used RAS)",
+		   buf1, "%9.4f");
 }
 
 void
@@ -679,6 +778,7 @@ bpred_after_priming(struct bpred_t *bpred)
   if (bpred == NULL)
     return;
 
+	/* Stats */
   bpred->lookups = 0;
   bpred->addr_hits = 0;
   bpred->dir_hits = 0;
@@ -692,6 +792,21 @@ bpred_after_priming(struct bpred_t *bpred)
   bpred->retstack_pops = 0;
   bpred->retstack_pushes = 0;
   bpred->ras_hits = 0;
+  
+	/* Reverse Stats */
+  bpred->reverse_lookups = 0;
+  bpred->reverse_addr_hits = 0;
+  bpred->reverse_dir_hits = 0;
+  bpred->reverse_used_ras = 0;
+  bpred->reverse_used_bimod = 0;
+  bpred->reverse_used_2lev = 0;
+  bpred->reverse_jr_hits = 0;
+  bpred->reverse_jr_seen = 0;
+  bpred->reverse_misses = 0;
+  bpred->reverse_replays = 0;
+  bpred->reverse_retstack_pops = 0;
+  bpred->reverse_retstack_pushes = 0;
+  bpred->reverse_ras_hits = 0;
 }
 
 #define BIMOD_HASH(PRED, ADDR)						\
@@ -761,6 +876,243 @@ bpred_dir_lookup(struct bpred_dir_t *pred_dir,	/* branch dir predictor inst */
     }
 
   return (char *)p;
+}
+
+/* probe a predictor for a next fetch address, the predictor is probed
+   with branch address BADDR, the branch target is BTARGET (used for
+   static predictors), and OP is the instruction opcode (used to simulate
+   predecode bits; a pointer to the predictor state entry (or null for jumps)
+   is returned in *DIR_UPDATE_PTR (used for updating predictor state),
+   and the non-speculative top-of-stack is returned in stack_recover_idx 
+   (used for recovering ret-addr stack after mis-predict).  */
+md_addr_t				/* predicted branch target addr */
+bpred_reverse_lookup(struct bpred_t *pred,	/* branch predictor instance */
+	     md_addr_t baddr,		/* branch address */
+	     md_addr_t btarget,		/* branch target if taken */
+	     enum md_opcode op,		/* opcode of instruction */
+	     int is_call,		/* non-zero if inst is fn call */
+	     int is_return,		/* non-zero if inst is fn return */
+	     struct bpred_update_t *dir_update_ptr, /* pred state pointer */
+	     int *stack_recover_idx)	/* Non-speculative top-of-stack;
+					 * used on mispredict recovery */
+{
+  struct bpred_btb_ent_t *pbtb = NULL;
+  int index, i;
+  bool_t taken = FALSE;
+  bool_t not_taken = FALSE;
+
+  if (!dir_update_ptr)
+    panic("no bpred update record");
+
+  /* if this is not a branch, return not-taken */
+  if (!(MD_OP_FLAGS(op) & F_CTRL))
+    return 0;
+
+  pred->lookups++;
+
+  dir_update_ptr->dir.ras = FALSE;
+  dir_update_ptr->pdir1 = NULL;
+  dir_update_ptr->pdir2 = NULL;
+  dir_update_ptr->pmeta = NULL;
+  /* Except for jumps, get a pointer to direction-prediction bits */
+  switch (pred->class) {
+    case BPredComb:
+      if ((MD_OP_FLAGS(op) & (F_CTRL|F_UNCOND)) != (F_CTRL|F_UNCOND))
+	{
+	  char *bimod, *twolev, *meta;
+	  bimod = bpred_dir_lookup (pred->dirpred.bimod, baddr);
+	  twolev = bpred_dir_lookup (pred->dirpred.twolev, baddr);
+	  meta = bpred_dir_lookup (pred->dirpred.meta, baddr);
+	  dir_update_ptr->pmeta = meta;
+	  dir_update_ptr->dir.meta  = (*meta >= 2);
+	  dir_update_ptr->dir.bimod = (*bimod >= 2);
+	  dir_update_ptr->dir.twolev  = (*twolev >= 2);
+	  if (*meta >= 2)
+	    {
+	      dir_update_ptr->pdir1 = twolev;
+	      dir_update_ptr->pdir2 = bimod;
+	    }
+	  else
+	    {
+	      dir_update_ptr->pdir1 = bimod;
+	      dir_update_ptr->pdir2 = twolev;
+	    }
+	}
+      break;
+    case BPred2Level:
+      if ((MD_OP_FLAGS(op) & (F_CTRL|F_UNCOND)) != (F_CTRL|F_UNCOND))
+	{
+	  dir_update_ptr->pdir1 =
+	    bpred_dir_lookup (pred->dirpred.twolev, baddr);
+	}
+      break;
+/**************************added TSBP case*********************************************/
+    case BPredTSBP:   
+		if ((MD_OP_FLAGS(op) & (F_CTRL|F_UNCOND)) != (F_CTRL|F_UNCOND)) {
+			dir_update_ptr->pdir1 = bpred_dir_lookup (pred->dirpred.twolev, baddr);  //get 2level base outcome prediction
+			
+			int key = key_from_features (pred->dirpred.twolev, baddr); // Get unmasked key from GHR and PC
+			
+			key = key & (pred->dirpred.tsbp->ts.head_table_size - 1); // mask key based on predictor table size
+			
+			/* incr head but prevent from going out of bounds*/
+			if (pred->dirpred.tsbp->ts.head >= pred->dirpred.tsbp->ts.correctness_width) {
+				pred->dirpred.tsbp->ts.head = 0;
+			} else {
+				pred->dirpred.tsbp->ts.head++;
+			}
+
+			/*if in replay mode and corretness buffer head indicates base predictor mistake*/
+			if(pred->dirpred.tsbp->ts.replay 
+				&& pred->dirpred.tsbp->ts.enabled 
+				&& (pred->dirpred.tsbp->ts.correctness_buffer[pred->dirpred.tsbp->ts.head] == 0)) {
+                invert = TRUE; 
+			}
+		}
+        break;
+/************************** MBP case *********************************************/
+	case BPredMBP:   
+		if ((MD_OP_FLAGS(op) & (F_CTRL|F_UNCOND)) != (F_CTRL|F_UNCOND)) {
+			dir_update_ptr->pdir1 = bpred_dir_lookup (pred->dirpred.twolev, baddr);  //get 2level base outcome prediction
+			
+			int key; 			// unmatched CHT key
+			int key_match = 0; 	// key match flag
+			
+			for (key = 0; key < pred->dirpred.mbp->mbp.cht_size) {
+				if ((pred->dirpred.mbp->mbp.cht_spc[key] == baddr) && pred->dirpred.mbp->mbp.valid[key]) { 	// Only break if baddr matches source pc and is valid
+					key_match = 1;
+					break;
+				}
+			}
+
+			/* if enabled, and there was a key match use the exact history */
+			if (pred->dirpred.mbp->mbp.enabled && key_match) {
+				if (pred->dirpred.mbp->mbp.cht_spc[key] == (pred->dirpred.mbp->mbp.cht_dpc[key] - 1)))	// Check if source pc is 1 less than destination pc (not taken)
+					not_taken = TRUE;
+				else	
+					taken = TRUE;
+			}
+		}
+        break;
+    case BPred2bit:
+      if ((MD_OP_FLAGS(op) & (F_CTRL|F_UNCOND)) != (F_CTRL|F_UNCOND))
+	{
+	  dir_update_ptr->pdir1 =
+	    bpred_dir_lookup (pred->dirpred.bimod, baddr);
+	}
+      break;
+    case BPredTaken:
+      return btarget;
+    case BPredNotTaken:
+      if ((MD_OP_FLAGS(op) & (F_CTRL|F_UNCOND)) != (F_CTRL|F_UNCOND))
+	{
+	  return baddr + sizeof(md_inst_t);
+	}
+      else
+	{
+	  return btarget;
+	}
+    default:
+      panic("bogus predictor class");
+  }
+
+  /*
+   * We have a stateful predictor, and have gotten a pointer into the
+   * direction predictor (except for jumps, for which the ptr is null)
+   */
+
+  /* record pre-pop TOS; if this branch is executed speculatively
+   * and is squashed, we'll restore the TOS and hope the data
+   * wasn't corrupted in the meantime. */
+  if (pred->retstack.size)
+    *stack_recover_idx = pred->retstack.tos;
+  else
+    *stack_recover_idx = 0;
+
+  /* if this is a return, pop return-address stack */
+  if (is_return && pred->retstack.size)
+    {
+      md_addr_t target = pred->retstack.stack[pred->retstack.tos].target;
+      pred->retstack.tos = (pred->retstack.tos + pred->retstack.size - 1)
+	                   % pred->retstack.size;
+      pred->retstack_pops++;
+      dir_update_ptr->dir.ras = TRUE; /* using RAS here */
+      return target;
+    }
+
+#ifndef RAS_BUG_COMPATIBLE
+  /* if function call, push return-address onto return-address stack */
+  if (is_call && pred->retstack.size)
+    {
+      pred->retstack.tos = (pred->retstack.tos + 1)% pred->retstack.size;
+      pred->retstack.stack[pred->retstack.tos].target = 
+	baddr + sizeof(md_inst_t);
+      pred->retstack_pushes++;
+    }
+#endif /* !RAS_BUG_COMPATIBLE */
+  
+  /* not a return. Get a pointer into the BTB */
+  index = (baddr >> MD_BR_SHIFT) & (pred->btb.sets - 1);
+
+  if (pred->btb.assoc > 1)
+    {
+      index *= pred->btb.assoc;
+
+      /* Now we know the set; look for a PC match */
+      for (i = index; i < (index+pred->btb.assoc) ; i++)
+	if (pred->btb.btb_data[i].addr == baddr)
+	  {
+	    /* match */
+	    pbtb = &pred->btb.btb_data[i];
+	    break;
+	  }
+    }	
+  else
+    {
+      pbtb = &pred->btb.btb_data[index];
+      if (pbtb->addr != baddr)
+	pbtb = NULL;
+    }
+
+  /*
+   * We now also have a pointer into the BTB for a hit, or NULL otherwise
+   */
+
+  /* if this is a jump, ignore predicted direction; we know it's taken. */
+  if ((MD_OP_FLAGS(op) & (F_CTRL|F_UNCOND)) == (F_CTRL|F_UNCOND))
+    {
+      return (pbtb ? pbtb->target : 1);
+    }
+
+  /* otherwise we have a conditional branch */
+  if (pbtb == NULL)
+    {
+      /* BTB miss -- just return a predicted direction */
+      if (taken) /* MBP knows it was taken */
+	    return 1
+	  else if (not_taken)
+		return 0
+      else 
+      {
+	    return ((*(dir_update_ptr->pdir1) >= 2)
+              ? /* taken */ 1
+              : /* not taken */ 0);
+      }
+    }
+  else
+    {
+      /* BTB hit, so return target if it's a predicted-taken branch */
+      if (taken) /* MBP knows it was taken */
+	    return pbtb->target
+	  else if (not_taken)
+		return 0
+      else
+      {
+	    return ((*(dir_update_ptr->pdir1) >= 2)
+              ? /* taken */ pbtb->target
+              : /* not taken */ 0);
+      }
+    }
 }
 
 /* probe a predictor for a next fetch address, the predictor is probed
@@ -1022,6 +1374,348 @@ bpred_recover(struct bpred_t *pred,	/* branch predictor instance */
    (may be NULL for jumps, which shouldn't modify state bits).  Note if
    bpred_update is done speculatively, branch-prediction may get polluted. */
 void
+bpred_reverse_update(struct bpred_t *pred,	/* branch predictor instance */
+	     md_addr_t baddr,		/* branch address */
+	     md_addr_t btarget,		/* resolved branch target */
+	     int taken,			/* non-zero if branch was taken */
+	     int pred_taken,		/* non-zero if branch was pred taken */
+	     int correct,		/* was earlier addr prediction ok? */
+	     enum md_opcode op,		/* opcode of instruction */
+	     struct bpred_update_t *dir_update_ptr)/* pred state pointer */
+{
+  struct bpred_btb_ent_t *pbtb = NULL;
+  struct bpred_btb_ent_t *lruhead = NULL, *lruitem = NULL;
+  int index, i;
+  
+  /* don't change bpred state for non-branch instructions or if this
+   * is a stateless predictor*/
+  if (!(MD_OP_FLAGS(op) & F_CTRL))
+    return;
+
+  /* Have a branch here */
+
+  if (correct)
+    pred->reverse_addr_hits++;
+
+  if (!!pred_taken == !!taken)
+    pred->reverse_dir_hits++;
+  else
+    pred->reverse_misses++;
+
+  if (dir_update_ptr->dir.ras)
+    {
+      pred->reverse_used_ras++;
+      if (correct)
+	pred->reverse_ras_hits++;
+    }
+  else if ((MD_OP_FLAGS(op) & (F_CTRL|F_COND)) == (F_CTRL|F_COND))
+    {
+      if (dir_update_ptr->dir.meta)
+	pred->reverse_used_2lev++;
+      else
+	pred->reverse_used_bimod++;
+    }
+
+  /* keep stats about JR's; also, but don't change any bpred state for JR's
+   * which are returns unless there's no retstack */
+  if (MD_IS_INDIR(op))
+    {
+      pred->reverse_jr_seen++;
+      if (correct)
+	pred->reverse_jr_hits++;
+      
+      if (!dir_update_ptr->dir.ras)
+	{
+	  pred->reverse_jr_non_ras_seen++;
+	  if (correct)
+	    pred->reverse_jr_non_ras_hits++;
+	}
+      else
+	{
+	  /* return that used the ret-addr stack; no further work to do */
+	  return;
+	}
+    }
+
+  /* Can exit now if this is a stateless predictor */
+  if (pred->class == BPredNotTaken || pred->class == BPredTaken)
+    return;
+
+  /* 
+   * Now we know the branch didn't use the ret-addr stack, and that this
+   * is a stateful predictor 
+   */
+
+#ifdef RAS_BUG_COMPATIBLE
+  /* if function call, push return-address onto return-address stack */
+  if (MD_IS_CALL(op) && pred->retstack.size)
+    {
+      pred->retstack.tos = (pred->retstack.tos + 1)% pred->retstack.size;
+      pred->retstack.stack[pred->retstack.tos].target = 
+	baddr + sizeof(md_inst_t);
+      pred->reverse_retstack_pushes++;
+    }
+#endif /* RAS_BUG_COMPATIBLE */
+
+  /* update L1 table if appropriate */
+  /* L1 table is updated unconditionally for combining predictor too */
+  if ((MD_OP_FLAGS(op) & (F_CTRL|F_UNCOND)) != (F_CTRL|F_UNCOND) &&
+      (pred->class == BPred2Level))         
+    {
+      int l1index, shift_reg;
+      
+      /* also update appropriate L1 history register */
+      l1index =
+	(baddr >> MD_BR_SHIFT) & (pred->dirpred.twolev->config.two.l1size - 1);
+      shift_reg =
+	(pred->dirpred.twolev->config.two.shiftregs[l1index] << 1) | (!!taken);
+      pred->dirpred.twolev->config.two.shiftregs[l1index] =
+	shift_reg & ((1 << pred->dirpred.twolev->config.two.shift_width) - 1);
+    }
+
+  /***********************IF TS update L1 table as above, also update correctness buffer*****************************/
+	if ((MD_OP_FLAGS(op) & (F_CTRL|F_UNCOND)) != (F_CTRL|F_UNCOND) && (pred->class == BPredTSBP)) {
+		int l1index, shift_reg;
+    
+		/* update L1 table, same as 2lev/comb predictors above this */
+		l1index = (baddr >> MD_BR_SHIFT) & (pred->dirpred.twolev->config.two.l1size - 1);
+		shift_reg = (pred->dirpred.twolev->config.two.shiftregs[l1index] << 1) | (!!taken);
+		pred->dirpred.twolev->config.two.shiftregs[l1index] = shift_reg & ((1 << pred->dirpred.twolev->config.two.shift_width) - 1);
+
+		int base_outcome;
+		int ts_outcome;
+		//unsigned int key;  /*added typedef in tsbp.h file*/
+      
+		int key = key_from_features (pred->dirpred.twolev, baddr); // Get unmasked key from GHR and PC
+			
+		key = key & (pred->dirpred.tsbp->ts.head_table_size - 1); // mask key based on predictor table size
+		
+		/*Set the base outcome; Also if in replay mode and ts_outcome is incorrect, turn off replay mode*/
+		if (pred->dirpred.tsbp->ts.replay) {
+			pred->reverse_replays++;
+			ts_outcome = pred_taken;
+
+			if (pred->dirpred.tsbp->ts.enabled && (pred->dirpred.tsbp->ts.correctness_buffer[pred->dirpred.tsbp->ts.head] == 0)) {
+				base_outcome = !pred_taken;
+			} else {
+				base_outcome = pred_taken;
+			}
+
+			if (!!ts_outcome != !!taken) {
+				pred->dirpred.tsbp->ts.replay = FALSE;
+			}
+		} else {
+			base_outcome = pred_taken;
+		}
+		
+		/* incr tail but prevent from going out of bounds*/
+		if (pred->dirpred.tsbp->ts.tail >= pred->dirpred.tsbp->ts.correctness_width) {
+			pred->dirpred.tsbp->ts.tail = 0;
+		} else {
+			pred->dirpred.tsbp->ts.tail++;
+		}
+		
+		/*determine if actual outcome (taken) of predicted direction is correct and update correctness buffer*/
+		pred->dirpred.tsbp->ts.correctness_buffer[pred->dirpred.tsbp->ts.tail] = (!!base_outcome == !!taken);  /*1 = base predictor correct. 0 = prediction incorrect*/
+      
+		/*if incorrect base prediction, update head table*/
+		if (!!base_outcome != !!taken) {
+			if(!pred->dirpred.tsbp->ts.replay && pred->dirpred.tsbp->ts.head_table[key] != NULL) { /*if not in replay mode, update head and set replay flag*/
+				pred->dirpred.tsbp->ts.head = pred->dirpred.tsbp->ts.head_table[key];
+				pred->dirpred.tsbp->ts.replay = TRUE;
+			}
+		}
+
+		pred->dirpred.tsbp->ts.head_table[key] = pred->dirpred.tsbp->ts.tail;   //else update head table
+	}
+  
+  /***********************IF MBP update L1 table as above, also update correctness history table*****************************/
+	if ((MD_OP_FLAGS(op) & (F_CTRL|F_UNCOND)) != (F_CTRL|F_UNCOND) && (pred->class == BPredMBP)) {
+		int l1index, shift_reg;
+		
+		/* update L1 table, same as 2lev/comb predictors above this */
+		l1index = (baddr >> MD_BR_SHIFT) & (pred->dirpred.twolev->config.two.l1size - 1);
+		shift_reg = (pred->dirpred.twolev->config.two.shiftregs[l1index] << 1) | (!!taken);
+		pred->dirpred.twolev->config.two.shiftregs[l1index] = shift_reg & ((1 << pred->dirpred.twolev->config.two.shift_width) - 1);
+
+		int base_outcome;
+		int mbp_outcome;
+		
+		/* In reverse mode, MBP doesn't really replay but instead takes valid info which can only be valid once (or until it's not) */
+		
+		int key; 			// unmatched CHT key
+		int key_match = 0; 	// key match flag
+			
+		for (key = 0; key < pred->dirpred.mbp->mbp.cht_size) {
+			if ((pred->dirpred.mbp->mbp.cht_spc[key] == baddr) && pred->dirpred.mbp->mbp.valid[key]) { 	// Only break if baddr matches source pc and is valid
+				key_match = 1;
+				break;
+			}
+		}
+
+		/* if enabled, and there was a key match the exact history was used*/
+		if (pred->dirpred.mbp->mbp.enabled && key_match) {
+			if (pred->dirpred.mbp->mbp.cht_spc[key] == (pred->dirpred.mbp->mbp.cht_dpc[key] - 1)))	// Check if source pc is 1 less than destination pc (not taken)
+				valid_taken = FALSE;
+			else	
+				valid_taken = TRUE;
+		}
+		
+		/* If valid info is determined to be invalid, then unset valid flag*/
+		if (valid_taken != taken) {
+			pred->dirpred.mbp->mbp.cht_valid[key] = FALSE;
+		}
+	}
+
+  /* find BTB entry if it's a taken branch (don't allocate for non-taken) */
+  if (taken)
+    {
+      index = (baddr >> MD_BR_SHIFT) & (pred->btb.sets - 1);
+      
+      if (pred->btb.assoc > 1)
+	{
+	  index *= pred->btb.assoc;
+	  
+	  /* Now we know the set; look for a PC match; also identify
+	   * MRU and LRU items */
+	  for (i = index; i < (index+pred->btb.assoc) ; i++)
+	    {
+	      if (pred->btb.btb_data[i].addr == baddr)
+		{
+		  /* match */
+		  assert(!pbtb);
+		  pbtb = &pred->btb.btb_data[i];
+		}
+	      
+	      dassert(pred->btb.btb_data[i].prev 
+		      != pred->btb.btb_data[i].next);
+	      if (pred->btb.btb_data[i].prev == NULL)
+		{
+		  /* this is the head of the lru list, ie current MRU item */
+		  dassert(lruhead == NULL);
+		  lruhead = &pred->btb.btb_data[i];
+		}
+	      if (pred->btb.btb_data[i].next == NULL)
+		{
+		  /* this is the tail of the lru list, ie the LRU item */
+		  dassert(lruitem == NULL);
+		  lruitem = &pred->btb.btb_data[i];
+		}
+	    }
+	  dassert(lruhead && lruitem);
+	  
+	  if (!pbtb)
+	    /* missed in BTB; choose the LRU item in this set as the victim */
+	    pbtb = lruitem;	
+	  /* else hit, and pbtb points to matching BTB entry */
+	  
+	  /* Update LRU state: selected item, whether selected because it
+	   * matched or because it was LRU and selected as a victim, becomes 
+	   * MRU */
+	  if (pbtb != lruhead)
+	    {
+	      /* this splices out the matched entry... */
+	      if (pbtb->prev)
+		pbtb->prev->next = pbtb->next;
+	      if (pbtb->next)
+		pbtb->next->prev = pbtb->prev;
+	      /* ...and this puts the matched entry at the head of the list */
+	      pbtb->next = lruhead;
+	      pbtb->prev = NULL;
+	      lruhead->prev = pbtb;
+	      dassert(pbtb->prev || pbtb->next);
+	      dassert(pbtb->prev != pbtb->next);
+	    }
+	  /* else pbtb is already MRU item; do nothing */
+	}
+      else
+	pbtb = &pred->btb.btb_data[index];
+    }
+      
+  /* 
+   * Now 'p' is a possibly null pointer into the direction prediction table, 
+   * and 'pbtb' is a possibly null pointer into the BTB (either to a 
+   * matched-on entry or a victim which was LRU in its set)
+   */
+
+	/* update state (but not for jumps) */
+	if (dir_update_ptr->pdir1) {  
+        if (taken) {
+			if (*dir_update_ptr->pdir1 < 3)
+				++*dir_update_ptr->pdir1;
+		} else { /* not taken */
+			if (*dir_update_ptr->pdir1 > 0)
+				--*dir_update_ptr->pdir1;
+        }
+    }
+
+  /* combining predictor also updates second predictor and meta predictor */
+  /* second direction predictor */
+  if (dir_update_ptr->pdir2)
+    {
+      if (taken)
+	{
+	  if (*dir_update_ptr->pdir2 < 3)
+	    ++*dir_update_ptr->pdir2;
+	}
+      else
+	{ /* not taken */
+	  if (*dir_update_ptr->pdir2 > 0)
+	    --*dir_update_ptr->pdir2;
+	}
+    }
+
+  /* meta predictor */
+  if (dir_update_ptr->pmeta)
+    {
+      if (dir_update_ptr->dir.bimod != dir_update_ptr->dir.twolev)
+	{
+	  /* we only update meta predictor if directions were different */
+	  if (dir_update_ptr->dir.twolev == (unsigned int)taken)
+	    {
+	      /* 2-level predictor was correct */
+	      if (*dir_update_ptr->pmeta < 3)
+		++*dir_update_ptr->pmeta;
+	    }
+	  else
+	    {
+	      /* bimodal predictor was correct */
+	      if (*dir_update_ptr->pmeta > 0)
+		--*dir_update_ptr->pmeta;
+	    }
+	}
+    }
+
+  /* update BTB (but only for taken branches) */
+  if (pbtb)
+    {
+      /* update current information */
+      dassert(taken);
+
+      if (pbtb->addr == baddr)
+	{
+	  if (!correct)
+	    pbtb->target = btarget;
+	}
+      else
+	{
+	  /* enter a new branch in the table */
+	  pbtb->addr = baddr;
+	  pbtb->op = op;
+	  pbtb->target = btarget;
+	}
+    }
+}
+
+/* update the branch predictor, only useful for stateful predictors; updates
+   entry for instruction type OP at address BADDR.  BTB only gets updated
+   for branches which are taken.  Inst was determined to jump to
+   address BTARGET and was taken if TAKEN is non-zero.  Predictor 
+   statistics are updated with result of prediction, indicated by CORRECT and 
+   PRED_TAKEN, predictor state to be updated is indicated by *DIR_UPDATE_PTR 
+   (may be NULL for jumps, which shouldn't modify state bits).  Note if
+   bpred_update is done speculatively, branch-prediction may get polluted. */
+void
 bpred_update(struct bpred_t *pred,	/* branch predictor instance */
 	     md_addr_t baddr,		/* branch address */
 	     md_addr_t btarget,		/* resolved branch target */
@@ -1124,6 +1818,9 @@ bpred_update(struct bpred_t *pred,	/* branch predictor instance */
   /***********************IF TS update L1 table as above, also update correctness buffer*****************************/
 	if ((MD_OP_FLAGS(op) & (F_CTRL|F_UNCOND)) != (F_CTRL|F_UNCOND) && (pred->class == BPredTSBP)) {
 		int l1index, shift_reg;
+		
+		// Get key before updating GHR!!!!
+		int key = key_from_features (pred->dirpred.twolev, baddr); // Get unmasked key from GHR and PC
     
 		/* update L1 table, same as 2lev/comb predictors above this */
 		l1index = (baddr >> MD_BR_SHIFT) & (pred->dirpred.twolev->config.two.l1size - 1);
@@ -1133,9 +1830,7 @@ bpred_update(struct bpred_t *pred,	/* branch predictor instance */
 		int base_outcome;
 		int ts_outcome;
 		//unsigned int key;  /*added typedef in tsbp.h file*/
-      
-		int key = key_from_features (pred->dirpred.twolev, baddr); // Get unmasked key from GHR and PC
-			
+      	
 		key = key & (pred->dirpred.tsbp->ts.head_table_size - 1); // mask key based on predictor table size
 		
 		/*Set the base outcome; Also if in replay mode and ts_outcome is incorrect, turn off replay mode*/
@@ -1181,6 +1876,9 @@ bpred_update(struct bpred_t *pred,	/* branch predictor instance */
 	if ((MD_OP_FLAGS(op) & (F_CTRL|F_UNCOND)) != (F_CTRL|F_UNCOND) && (pred->class == BPredMBP)) {
 		int l1index, shift_reg;
 		
+		// Get key before updating GHR!!!!
+		int key = key_from_features (pred->dirpred.twolev, baddr); // Get unmasked key from GHR and PC
+		
 		/* update L1 table, same as 2lev/comb predictors above this */
 		l1index = (baddr >> MD_BR_SHIFT) & (pred->dirpred.twolev->config.two.l1size - 1);
 		shift_reg = (pred->dirpred.twolev->config.two.shiftregs[l1index] << 1) | (!!taken);
@@ -1189,8 +1887,6 @@ bpred_update(struct bpred_t *pred,	/* branch predictor instance */
 		int base_outcome;
 		int mbp_outcome;
 		
-		int key = key_from_features (pred->dirpred.twolev, baddr); // Get unmasked key from GHR and PC
-			
 		key = key & (pred->dirpred.mbp->mbp.cht_size - 1); // mask key based on predictor table size
 		
 		bool_t just_disabled_replay = FALSE;
@@ -1226,6 +1922,16 @@ bpred_update(struct bpred_t *pred,	/* branch predictor instance */
 		pred->dirpred.mbp->mbp.cht_dpc[key] = btarget;
 		pred->dirpred.mbp->mbp.cht_valid[key] = TRUE;
 		pred->dirpred.mbp->mbp.cht_spc[key] = baddr;
+		
+		/* make sure no other matching spc keys are valid*/
+		int valid_key;
+		
+		for (valid_key = 0; valid_key < pred->dirpred.mbp->mbp.cht_size; valid_key++) {
+			if ((pred->dirpred.mbp->mbp.cht_spc[valid_key] == baddr) && pred->dirpred.mbp->mbp.cht_valid[valid_key] && (valid_key != key)) {
+				pred->dirpred.mbp->mbp.cht_valid[valid_key] = FALSE;
+			}
+		}
+		
 	}
 
   /* find BTB entry if it's a taken branch (don't allocate for non-taken) */
