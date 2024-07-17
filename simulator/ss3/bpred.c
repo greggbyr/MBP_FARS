@@ -1090,11 +1090,11 @@ bpred_reverse_lookup(struct bpred_t *pred,	/* branch predictor instance */
   if (pbtb == NULL)
     {
       /* BTB miss -- just return a predicted direction */
-      if (taken) /* MBP knows it was taken */
+	if (taken) { /* MBP knows it was taken */
 	    return 1
-	  else if (not_taken)
+	} else if (not_taken) {
 		return 0
-      else 
+    } else 
       {
 	    return ((*(dir_update_ptr->pdir1) >= 2)
               ? /* taken */ 1
@@ -1104,11 +1104,11 @@ bpred_reverse_lookup(struct bpred_t *pred,	/* branch predictor instance */
   else
     {
       /* BTB hit, so return target if it's a predicted-taken branch */
-      if (taken) /* MBP knows it was taken */
+      if (taken) { /* MBP knows it was taken */
 	    return pbtb->target
-	  else if (not_taken)
+	  } else if (not_taken) {
 		return 0
-      else
+      } else
       {
 	    return ((*(dir_update_ptr->pdir1) >= 2)
               ? /* taken */ pbtb->target
@@ -1547,8 +1547,9 @@ bpred_reverse_update(struct bpred_t *pred,	/* branch predictor instance */
 		
 		int key; 			// unmatched CHT key
 		int key_match = 0; 	// key match flag
+		bool_t valid_taken = TRUE;
 			
-		for (key = 0; key < pred->dirpred.mbp->mbp.cht_size) {
+		for (key = 0; key < pred->dirpred.mbp->mbp.cht_size; key++) {
 			if ((pred->dirpred.mbp->mbp.cht_spc[key] == baddr) && pred->dirpred.mbp->mbp.cht_valid[key]) { 	// Only break if baddr matches source pc and is valid
 				key_match = 1;
 				break;
@@ -1557,10 +1558,9 @@ bpred_reverse_update(struct bpred_t *pred,	/* branch predictor instance */
 
 		/* if enabled, and there was a key match the exact history was used*/
 		if (pred->dirpred.mbp->mbp.enabled && key_match) {
-			if (pred->dirpred.mbp->mbp.cht_spc[key] == (pred->dirpred.mbp->mbp.cht_dpc[key] - 1)))	// Check if source pc is 1 less than destination pc (not taken)
+			if (pred->dirpred.mbp->mbp.cht_spc[key] == (pred->dirpred.mbp->mbp.cht_dpc[key] - 1)) {	// Check if source pc is 1 less than destination pc (not taken)
 				valid_taken = FALSE;
-			else	
-				valid_taken = TRUE;
+			}
 		}
 		
 		/* If valid info is determined to be invalid, then unset valid flag*/
