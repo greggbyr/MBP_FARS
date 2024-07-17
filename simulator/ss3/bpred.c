@@ -1923,13 +1923,13 @@ bpred_update(struct bpred_t *pred,	/* branch predictor instance */
 		pred->dirpred.mbp->mbp.cht_spc[key] = baddr;
 		
 		/* make sure no other matching spc keys are valid*/
-		int valid_key;
+		//int valid_key;
 		
-		for (valid_key = 0; valid_key < pred->dirpred.mbp->mbp.cht_size; valid_key++) {
-			if ((pred->dirpred.mbp->mbp.cht_spc[valid_key] == baddr) && pred->dirpred.mbp->mbp.cht_valid[valid_key] && (valid_key != key)) {
-				pred->dirpred.mbp->mbp.cht_valid[valid_key] = FALSE;
-			}
-		}
+		//for (valid_key = 0; valid_key < pred->dirpred.mbp->mbp.cht_size; valid_key++) {
+		//	if ((pred->dirpred.mbp->mbp.cht_spc[valid_key] == baddr) && pred->dirpred.mbp->mbp.cht_valid[valid_key] && (valid_key != key)) {
+		//		pred->dirpred.mbp->mbp.cht_valid[valid_key] = FALSE;
+		//	}
+		//}
 		
 	}
 
