@@ -898,6 +898,7 @@ bpred_reverse_lookup(struct bpred_t *pred,	/* branch predictor instance */
 {
   struct bpred_btb_ent_t *pbtb = NULL;
   int index, i;
+  bool_t invert = FALSE;
   bool_t taken = FALSE;
   bool_t not_taken = FALSE;
 
@@ -978,8 +979,8 @@ bpred_reverse_lookup(struct bpred_t *pred,	/* branch predictor instance */
 			int key; 			// unmatched CHT key
 			int key_match = 0; 	// key match flag
 			
-			for (key = 0; key < pred->dirpred.mbp->mbp.cht_size) {
-				if ((pred->dirpred.mbp->mbp.cht_spc[key] == baddr) && pred->dirpred.mbp->mbp.valid[key]) { 	// Only break if baddr matches source pc and is valid
+			for (key = 0; key < pred->dirpred.mbp->mbp.cht_size; key++) {
+				if ((pred->dirpred.mbp->mbp.cht_spc[key] == baddr) && pred->dirpred.mbp->mbp.cht_valid[key]) { 	// Only break if baddr matches source pc and is valid
 					key_match = 1;
 					break;
 				}
@@ -987,10 +988,11 @@ bpred_reverse_lookup(struct bpred_t *pred,	/* branch predictor instance */
 
 			/* if enabled, and there was a key match use the exact history */
 			if (pred->dirpred.mbp->mbp.enabled && key_match) {
-				if (pred->dirpred.mbp->mbp.cht_spc[key] == (pred->dirpred.mbp->mbp.cht_dpc[key] - 1)))	// Check if source pc is 1 less than destination pc (not taken)
+				if (pred->dirpred.mbp->mbp.cht_spc[key] == (pred->dirpred.mbp->mbp.cht_dpc[key] - 1)) {	// Check if source pc is 1 less than destination pc (not taken)
 					not_taken = TRUE;
-				else	
+				} else {
 					taken = TRUE;
+				}
 			}
 		}
         break;
@@ -1547,7 +1549,7 @@ bpred_reverse_update(struct bpred_t *pred,	/* branch predictor instance */
 		int key_match = 0; 	// key match flag
 			
 		for (key = 0; key < pred->dirpred.mbp->mbp.cht_size) {
-			if ((pred->dirpred.mbp->mbp.cht_spc[key] == baddr) && pred->dirpred.mbp->mbp.valid[key]) { 	// Only break if baddr matches source pc and is valid
+			if ((pred->dirpred.mbp->mbp.cht_spc[key] == baddr) && pred->dirpred.mbp->mbp.cht_valid[key]) { 	// Only break if baddr matches source pc and is valid
 				key_match = 1;
 				break;
 			}
