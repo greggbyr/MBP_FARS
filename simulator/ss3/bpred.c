@@ -793,20 +793,20 @@ bpred_after_priming(struct bpred_t *bpred)
   bpred->retstack_pushes = 0;
   bpred->ras_hits = 0;
   
-	/* Reverse Stats */
-  bpred->reverse_lookups = 0;
-  bpred->reverse_addr_hits = 0;
-  bpred->reverse_dir_hits = 0;
-  bpred->reverse_used_ras = 0;
-  bpred->reverse_used_bimod = 0;
-  bpred->reverse_used_2lev = 0;
-  bpred->reverse_jr_hits = 0;
-  bpred->reverse_jr_seen = 0;
-  bpred->reverse_misses = 0;
-  bpred->reverse_replays = 0;
-  bpred->reverse_retstack_pops = 0;
-  bpred->reverse_retstack_pushes = 0;
-  bpred->reverse_ras_hits = 0;
+	/* Reverse Stats */ //Set to 1 for now to avoid runtime issues
+  bpred->reverse_lookups = 1;
+  bpred->reverse_addr_hits = 1;
+  bpred->reverse_dir_hits = 1;
+  bpred->reverse_used_ras = 1;
+  bpred->reverse_used_bimod = 1;
+  bpred->reverse_used_2lev = 1;
+  bpred->reverse_jr_hits = 1;
+  bpred->reverse_jr_seen = 1;
+  bpred->reverse_misses = 1;
+  bpred->reverse_replays = 1;
+  bpred->reverse_retstack_pops = 1;
+  bpred->reverse_retstack_pushes = 1;
+  bpred->reverse_ras_hits = 1;
 }
 
 #define BIMOD_HASH(PRED, ADDR)						\
