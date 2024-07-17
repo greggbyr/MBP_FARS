@@ -1091,9 +1091,9 @@ bpred_reverse_lookup(struct bpred_t *pred,	/* branch predictor instance */
     {
       /* BTB miss -- just return a predicted direction */
 	if (taken) { /* MBP knows it was taken */
-	    return 1
+	    return 1;
 	} else if (not_taken) {
-		return 0
+		return 0;
     } else 
       {
 	    return ((*(dir_update_ptr->pdir1) >= 2)
@@ -1105,9 +1105,9 @@ bpred_reverse_lookup(struct bpred_t *pred,	/* branch predictor instance */
     {
       /* BTB hit, so return target if it's a predicted-taken branch */
       if (taken) { /* MBP knows it was taken */
-	    return pbtb->target
+	    return pbtb->target;
 	  } else if (not_taken) {
-		return 0
+		return 0;
       } else
       {
 	    return ((*(dir_update_ptr->pdir1) >= 2)
@@ -1539,9 +1539,6 @@ bpred_reverse_update(struct bpred_t *pred,	/* branch predictor instance */
 		l1index = (baddr >> MD_BR_SHIFT) & (pred->dirpred.twolev->config.two.l1size - 1);
 		shift_reg = (pred->dirpred.twolev->config.two.shiftregs[l1index] << 1) | (!!taken);
 		pred->dirpred.twolev->config.two.shiftregs[l1index] = shift_reg & ((1 << pred->dirpred.twolev->config.two.shift_width) - 1);
-
-		int base_outcome;
-		int mbp_outcome;
 		
 		/* In reverse mode, MBP doesn't really replay but instead takes valid info which can only be valid once (or until it's not) */
 		
