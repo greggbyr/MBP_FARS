@@ -72,6 +72,7 @@
 #include "ptrace.h"
 #include "dlite.h"
 #include "sim.h"
+#include "hash-table.h"
 
 /*
  * This file implements a very detailed out-of-order issue superscalar
@@ -128,9 +129,9 @@ static int tsbp_nelt = 5;
 static int tsbp_config[5] =
   { /* l1size */1, /* l2size */16384, /* hist */14, /* xor */TRUE, /*head_table_width*/ 16384};
   
-/* MBP config (<l1size> <l2size> <hist_size> <xor> <cht_size>) */  
-static int mbp_nelt = 5;
-static int mbp_config[5] =
+/* CHBP config (<l1size> <l2size> <hist_size> <xor> <cht_size>) */  
+static int chbp_nelt = 5;
+static int chbp_config[5] =
   { /* l1size */1, /* l2size */16384, /* hist */14, /* xor */TRUE, /*cht_size*/ 16384};
 
 /* combining predictor config (<meta_table_size> */
@@ -420,6 +421,139 @@ static struct stat_stat_t *pcstat_sdists[MAX_PCSTAT_VARS];
 	 ? *((STAT)->variant.for_counter.var)				\
 	 : (panic("bad stat class"), 0))))
 
+/* Reversible Stream */
+struct HashTable* btarget_hash;
+
+void init_btarget (void) {
+	btarget_hash = createHashTable(TABLE_SIZE);
+}
+
+void set_btarget (md_addr_t baddr, md_addr_t btarget) {
+	insert(btarget_hash, baddr, btarget);
+}
+
+md_addr_t get_btarget (md_addr_t baddr) {
+	md_addr_t btarget = retrieve(btarget_hash, baddr);
+	
+	return btarget;
+}
+
+struct outcome {
+	md_addr_t baddr;
+	md_addr_t btarget;
+	int taken;
+	enum md_opcode op;
+};
+
+struct outcome_history {
+	int MAX_HIST_CNT;
+	int length;
+	struct outcome *b_outcomes;
+}
+
+struct outcome_history oh*;
+
+void init_outcome (void) {
+	oh->MAX_HIST_CNT = 2;
+	oh->length = 0;
+	oh->b_outcomes = (*outcome)malloc(sizeof(outcome) * oh->MAX_HIST_CNT);
+}
+
+void append_outcome (md_addr_t fwd_baddr, md_addr_t fwd_btarget, int fwd_taken, enum md_opcode fwd_op) {
+	oh->length++;
+	
+	if (oh->length > oh->MAX_HIST_CNT) {
+		struct outcome_history new_oh*;
+		
+		new_oh->MAX_HIST_CNT = 2 * oh->MAX_HIST_CNT;
+		new_oh->length = oh->length - 1;
+		new_oh->b_outcomes = (*outcome)malloc(sizeof(outcome) * new_oh->MAX_HIST_CNT);
+		
+		for (int index = 0; index < new_oh->length; index++) {
+			new_oh->b_outcomes[index] = oh->b_outcomes[index];
+		}
+		
+		free(oh->b_outcomes);
+		
+		delete oh;
+		
+		oh = new_oh;
+		
+		oh->length++;
+	}
+	
+	oh->b_outcomes[oh->length - 1]->baddr = fwd_baddr;
+	oh->b_outcomes[oh->length - 1]->btarget = fwd_btarget;
+	oh->b_outcomes[oh->length - 1]->taken = fwd_taken;
+	oh->b_outcomes[oh->length - 1]->op = fwd_op;
+}
+
+struct outcome get_outcome (void) {
+	struct outcome *o;
+	
+	o->baddr = oh->b_outcomes[oh->length - 1]->baddr;
+	o->btarget = oh->b_outcomes[oh->length - 1]->btarget;
+	o->taken = oh->b_outcomes[oh->length - 1]->taken;
+	o->op = oh->b_outcomes[oh->length - 1]->op;
+	
+	oh->length--;
+	
+	return o;
+}	
+
+/* Run reverse simulation of branch predictions */
+void reverse_flow (void) {
+	md_addr_t fwd_baddr;		/* branch address */
+	md_addr_t fwd_btarget;		/* resolved branch target */
+	md_addr_t fwd_act_btarget;		/* actual branch target */
+	int fwd_taken;			/* non-zero if branch was taken */
+	enum md_opcode fwd_op;		/* opcode of instruction */
+	struct bpred_update_t *rev_dir_update_ptr;  /* FWD pred state pointer */
+	int stack_recover_idx;
+	
+	rev_dir_update_ptr = &(fetch_data[fetch_tail].dir_update);
+	
+	stack_recover_idx = fetch_data[fetch_head].stack_recover_idx;
+	
+	while (outcome_length) {
+		struct outcome o = get_outcome();
+		
+		fwd_baddr = o->baddr;
+		fwd_btarget = o->btarget;
+		fwd_taken = o->taken;
+		fwd_op = o->op;
+		
+		fwd_act_btarget = get_btarget(fwd_baddr);
+		
+		rev_prd_btarget = bpred_lookup(pred,
+			   /* branch address */fwd_baddr,
+			   /* target address */fwd_act_btarget,
+			   /* opcode */fwd_op,
+			   /* call? */MD_IS_CALL(fwd_op),
+			   /* return? */MD_IS_RETURN(fwd_op),
+			   /* updt */rev_dir_update_ptr,
+			   /* RSB index */&stack_recover_idx,
+				   /* REV mode */ 1);
+				   
+		if (!rev_prd_btarget)
+	    {
+	      /* no predicted taken target, attempt not taken target */
+	      rev_prd_btarget = rev_prd_btarget + sizeof(md_inst_t);
+	    }
+				   
+		bpred_update(pred,
+		       /* branch address */rs->PC,
+		       /* actual target address */fwd_baddr,
+                       /* taken? */fwd_act_btarget != (fwd_baddr +
+                                                   sizeof(md_inst_t)),
+                       /* pred taken? */rev_prd_btarget != (fwd_baddr +
+                                                        sizeof(md_inst_t)),
+                       /* correct pred? */rev_prd_btarget == fwd_act_btarget,
+                       /* opcode */fwd_op,
+                       /* dir predictor update pointer */rev_dir_update_ptr,
+				   /* REV mode */ 1);
+	}
+}
 
 /* memory access latency, assumed to not cross a page boundary */
 static unsigned int			/* total latency of access */
@@ -664,7 +798,7 @@ sim_reg_options(struct opt_odb_t *odb)
                );
 
   opt_reg_string(odb, "-bpred",
-		 "branch predictor type {nottaken|taken|perfect|bimod|2lev|comb|tsbp|mbp}",
+		 "branch predictor type {nottaken|taken|perfect|bimod|2lev|comb|tsbp|chbp}",
                  &pred_type, /* default */"bimod",
                  /* print */TRUE, /* format */NULL);
 
@@ -688,11 +822,11 @@ sim_reg_options(struct opt_odb_t *odb)
 		   /* default */tsbp_config,
                    /* print */TRUE, /* format */NULL, /* !accrue */FALSE);
 				   
-  opt_reg_int_list(odb, "-bpred:mbp",
-                   "MBP config "
+  opt_reg_int_list(odb, "-bpred:chbp",
+                   "CHBP config "
 		   "(<l1size> <l2size> <hist_size> <xor> <cht_size>)",
-                   mbp_config, mbp_nelt, &mbp_nelt,
-		   /* default */mbp_config,
+                   chbp_config, chbp_nelt, &chbp_nelt,
+		   /* default */chbp_config,
                    /* print */TRUE, /* format */NULL, /* !accrue */FALSE);
 
   opt_reg_int_list(odb, "-bpred:comb",
@@ -955,7 +1089,7 @@ sim_check_options(struct opt_odb_t *odb,        /* options database */
 			  /* history reg size */0,
 			  /* history xor address */0,
 			  /* TSBP Header Width */0,
-			  /* MBP CHT Size */0,
+			  /* CHBP CHT Size */0,
 			  /* btb sets */btb_config[0],
 			  /* btb assoc */btb_config[1],
 			  /* ret-addr stack size */ras_size);
@@ -976,7 +1110,7 @@ sim_check_options(struct opt_odb_t *odb,        /* options database */
 			  /* history reg size */twolev_config[2],
 			  /* history xor address */twolev_config[3],
 			  /* TSBP Header Width */0,
-			  /* MBP CHT Size */0,
+			  /* CHBP CHT Size */0,
 			  /* btb sets */btb_config[0],
 			  /* btb assoc */btb_config[1],
 			  /* ret-addr stack size */ras_size);
@@ -997,28 +1131,28 @@ sim_check_options(struct opt_odb_t *odb,        /* options database */
 			  /* history reg size */tsbp_config[2],
 			  /* history xor address */tsbp_config[3],
 			  /* TSBP Header Width */tsbp_config[4],
-			  /* MBP CHT Size */0,
+			  /* CHBP CHT Size */0,
 			  /* btb sets */btb_config[0],
 			  /* btb assoc */btb_config[1],
 			  /* ret-addr stack size */ras_size);
     }
-  else if (!mystricmp(pred_type, "mbp"))
+  else if (!mystricmp(pred_type, "chbp"))
     {
       /* Mississippi branch predictor, bpred_create() checks args */
-      if (mbp_nelt != 5)
-	fatal("bad MBP pred config (<l1size> <l2size> <hist_size> <xor> <cht_size>)");
+      if (chbp_nelt != 5)
+	fatal("bad CHBP pred config (<l1size> <l2size> <hist_size> <xor> <cht_size>)");
       if (btb_nelt != 2)
 	fatal("bad btb config (<num_sets> <associativity>)");
 
-      pred = bpred_create(BPredMBP,
+      pred = bpred_create(BPredCHBP,
 			  /* bimod table size */0,
-			  /* 2lev l1 size */mbp_config[0],
-			  /* 2lev l2 size */mbp_config[1],
+			  /* 2lev l1 size */chbp_config[0],
+			  /* 2lev l2 size */chbp_config[1],
 			  /* meta table size */0,
-			  /* history reg size */mbp_config[2],
-			  /* history xor address */mbp_config[3],
+			  /* history reg size */chbp_config[2],
+			  /* history xor address */chbp_config[3],
 			  /* TSBP Header Width */0,
-			  /* MBP CHT Size */mbp_config[4],
+			  /* CHBP CHT Size */chbp_config[4],
 			  /* btb sets */btb_config[0],
 			  /* btb assoc */btb_config[1],
 			  /* ret-addr stack size */ras_size);
@@ -1043,7 +1177,7 @@ sim_check_options(struct opt_odb_t *odb,        /* options database */
 			  /* history reg size */twolev_config[2],
 			  /* history xor address */twolev_config[3],
 			  /* TSBP Header Width */0,
-			  /* MBP CHT Size */0,
+			  /* CHBP CHT Size */0,
 			  /* btb sets */btb_config[0],
 			  /* btb assoc */btb_config[1],
 			  /* ret-addr stack size */ras_size);
@@ -2312,7 +2446,19 @@ ruu_commit(void)
                                                         sizeof(md_inst_t)),
                        /* correct pred? */rs->pred_PC == rs->next_PC,
                        /* opcode */rs->op,
-                       /* dir predictor update pointer */&rs->dir_update);
+                       /* dir predictor update pointer */&rs->dir_update,
+				   /* FWD mode */ 0);
+					   
+	  if (rs->next_PC != (rs->PC + sizeof(md_inst_t))) {
+		set_btarget(rs->PC, rs->next_PC);
+	  }
+	  
+	  append_outcome(/* branch address */rs->PC,
+					   /* actual target address */rs->next_PC,
+                       /* taken? */rs->next_PC != (rs->PC + sizeof(md_inst_t)),
+                       /* pred taken? */rs->pred_PC != (rs->PC + sizeof(md_inst_t)),
+                       /* correct pred? */rs->pred_PC == rs->next_PC,
+                       /* opcode */rs->op);
 	}
 
       /* invalidate RUU operation instance */
@@ -2501,7 +2647,19 @@ ruu_writeback(void)
 							sizeof(md_inst_t)),
 		       /* correct pred? */rs->pred_PC == rs->next_PC,
 		       /* opcode */rs->op,
-		       /* dir predictor update pointer */&rs->dir_update);
+		       /* dir predictor update pointer */&rs->dir_update,
+				   /* FWD mode */ 0);
+			   
+	  if (rs->next_PC != (rs->PC + sizeof(md_inst_t))) {
+		set_btarget(rs->PC, rs->next_PC);
+	  }
+	  
+	  append_outcome(/* branch address */rs->PC,
+					   /* actual target address */rs->next_PC,
+                       /* taken? */rs->next_PC != (rs->PC + sizeof(md_inst_t)),
+                       /* pred taken? */rs->pred_PC != (rs->PC + sizeof(md_inst_t)),
+                       /* correct pred? */rs->pred_PC == rs->next_PC,
+                       /* opcode */rs->op);
 	}
 
       /* entered writeback stage, indicate in pipe trace */
@@ -4149,7 +4307,19 @@ ruu_dispatch(void)
 							sizeof(md_inst_t)),
 			       /* correct pred? */pred_PC == regs.regs_NPC,
 			       /* opcode */op,
-			       /* predictor update ptr */&rs->dir_update);
+			       /* predictor update ptr */&rs->dir_update,
+				   /* FWD mode */ 0);
+		  
+		  if (rs->next_PC != (rs->PC + sizeof(md_inst_t))) {
+			set_btarget(rs->PC, rs->next_PC);
+		  }
+		  
+		  append_outcome(/* branch address */rs->PC,
+						   /* actual target address */rs->next_PC,
+						   /* taken? */rs->next_PC != (rs->PC + sizeof(md_inst_t)),
+						   /* pred taken? */rs->pred_PC != (rs->PC + sizeof(md_inst_t)),
+						   /* correct pred? */rs->pred_PC == rs->next_PC,
+						   /* opcode */rs->op);
 		}
 	    }
 
@@ -4366,7 +4536,8 @@ ruu_fetch(void)
 			   /* call? */MD_IS_CALL(op),
 			   /* return? */MD_IS_RETURN(op),
 			   /* updt */&(fetch_data[fetch_tail].dir_update),
-			   /* RSB index */&stack_recover_idx);
+			   /* RSB index */&stack_recover_idx,
+				   /* FWD mode */ 0);
 	  else
 	    fetch_pred_PC = 0;
 
@@ -4496,11 +4667,13 @@ simoo_mstate_obj(FILE *stream,			/* output stream */
   return NULL;
 }
 
-
 /* start simulation, program loaded, processor precise state initialized */
 void
 sim_main(void)
 {
+	init_outcome();
+	init_btarget();
+	
   /* ignore any floating point exceptions, they may occur on mis-speculated
      execution paths */
   signal(SIGFPE, SIG_IGN);
@@ -4677,6 +4850,12 @@ sim_main(void)
 
       /* finish early? */
       if (max_insts && sim_num_insn >= max_insts)
+		  reverse_flow();
+	  
+		  freeHashTable(btarget_hash);
 	return;
     }
+	
+	reverse_flow();
+	freeHashTable(btarget_hash);
 }

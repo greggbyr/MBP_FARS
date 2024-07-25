@@ -102,7 +102,7 @@ enum bpred_class {
   BPredComb,                    /* combined predictor (McFarling) */
   BPred2Level,			/* 2-level correlating pred w/2-bit counters */
   BPredTSBP,			/* Temporal Stream Branch Predictor */
-  BPredMBP,				/* Mississippi Branch Predictor */
+  BPredCHBP,				/* Mississippi Branch Predictor */
   BPred2bit,			/* 2-bit saturating cntr pred (dir mapped) */
   BPredTaken,			/* static predict taken */
   BPredNotTaken,		/* static predict not taken */
@@ -155,17 +155,17 @@ struct bpred_ts_t {
 };
 
 /* temporal stream predictor def */
-struct bpred_mbp_t {
+struct bpred_chbp_t {
   enum bpred_class class;				/* type of predictor */
   struct {
     unsigned int cht_size;				/* correctness history table size, number of table entries */
-	bool_t enabled;						/* MBP Enabled flag */
+	bool_t enabled;						/* CHBP Enabled flag */
 	md_addr_t *cht_spc;					/* Correctness history table source pc bits*/
 	bool_t *cht_replay;					/* Correctness history table replay bits*/
 	bool_t *cht_correct;				/* Correctness history table correct bits*/
 	bool_t *cht_valid;					/* Correctness history table valid bits*/
 	md_addr_t *cht_dpc;					/* Correctness history table destination pc bits*/
-  } mbp;
+  } chbp;
 };
 
 /* branch predictor def */
@@ -175,9 +175,18 @@ struct bpred_t {
     struct bpred_dir_t *bimod;	  /* first direction predictor */
     struct bpred_dir_t *twolev;	  /* second direction predictor */
 	struct bpred_ts_t  *tsbp;	  /* temporal stream */
-	struct bpred_mbp_t *mbp;	  /* Mississippi branch predictor */
+	struct bpred_chbp_t *chbp;	  /* Mississippi branch predictor */
     struct bpred_dir_t *meta;	  /* meta predictor */
-  } dirpred;
+  } fwd_dirpred;
+  
+  /* Reversible Structs */
+  struct {
+    struct bpred_dir_t *bimod;	  /* first direction predictor */
+    struct bpred_dir_t *twolev;	  /* second direction predictor */
+	struct bpred_ts_t  *tsbp;	  /* temporal stream */
+	struct bpred_chbp_t *chbp;	  /* Mississippi branch predictor */
+    struct bpred_dir_t *meta;	  /* meta predictor */
+  } rev_dirpred;
 
   struct {
     int sets;			/* num BTB sets */
@@ -234,15 +243,26 @@ struct bpred_t {
 
 /* branch predictor update information */
 struct bpred_update_t {
-  char *pdir1;		/* direction-1 predictor counter */
-  char *pdir2;		/* direction-2 predictor counter */
-  char *pmeta;		/* meta predictor counter */
+  char *fwd_pdir1;		/* direction-1 predictor counter */
+  char *fwd_pdir2;		/* direction-2 predictor counter */
+  char *fwd_pmeta;		/* meta predictor counter */
   struct {		/* predicted directions */
     unsigned int ras    : 1;	/* RAS used */
     unsigned int bimod  : 1;    /* bimodal predictor */
     unsigned int twolev : 1;    /* 2-level predictor */
     unsigned int meta   : 1;    /* meta predictor (0..bimod / 1..2lev) */
-  } dir;
+  } fwd_dir;
+  
+  /* Reversible Structs */
+  char *rev_pdir1;		/* direction-1 predictor counter */
+  char *rev_pdir2;		/* direction-2 predictor counter */
+  char *rev_pmeta;		/* meta predictor counter */
+  struct {		/* predicted directions */
+    unsigned int ras    : 1;	/* RAS used */
+    unsigned int bimod  : 1;    /* bimodal predictor */
+    unsigned int twolev : 1;    /* 2-level predictor */
+    unsigned int meta   : 1;    /* meta predictor (0..bimod / 1..2lev) */
+  } rev_dir;
 };
 
 /* create a branch predictor */
@@ -255,7 +275,7 @@ bpred_create(enum bpred_class class,	/* type of predictor to create */
 	     unsigned int shift_width,	/* history register width */
 	     unsigned int xor,		/* history xor address flag */
        	     unsigned int head_table_width, /*TS head table width*/
-	     unsigned int cht_size,	 /*MBP correctness history table size*/
+	     unsigned int cht_size,	 /*CHBP correctness history table size*/
 	     unsigned int btb_sets,	/* number of sets in BTB */ 
 	     unsigned int btb_assoc,	/* BTB associativity */
 	     unsigned int retstack_size);/* num entries in ret-addr stack */
@@ -279,10 +299,10 @@ bpred_ts_create (
   unsigned int head_table_size);			/* header table size */
 
 /* create a Mississippi branch direction predictor */
-struct bpred_mbp_t *		/* temporal stream branch predictor instance */
-bpred_mbp_create (
+struct bpred_chbp_t *		/* temporal stream branch predictor instance */
+bpred_chbp_create (
   enum bpred_class class,	/* type of predictor to create */
-  unsigned int mbp_enabled,              /* MBP Enabled Flag */
+  unsigned int chbp_enabled,              /* CHBP Enabled Flag */
   unsigned int cht_size);			/* header table size */
 
 /* print branch predictor configuration */
