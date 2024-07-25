@@ -15,7 +15,7 @@ of SimpleScalar, LLC (info@simplescalar.com).
 
 sim: command line: /home/greggbyr/common/Documents/MBP_ReCISC/simulator/ss3/sim-outorder -max:inst 10000000 -bpred tsbp -bpred:tsbp 1 65536 16 1 16 run.go 50 21 5stone21.in 
 
-sim: simulation started @ Tue Jul 16 19:45:21 2024, options follow:
+sim: simulation started @ Wed Jul 24 23:31:19 2024, options follow:
 
 sim-outorder: This simulator implements a very detailed out-of-order issue
 superscalar processor with a two-level memory system and speculative
@@ -146,8 +146,8 @@ sim_num_refs                2709734 # total number of loads and stores committed
 sim_num_loads               1952510 # total number of loads committed
 sim_num_stores          757224.0000 # total number of stores committed
 sim_num_branches            1810316 # total number of branches committed
-sim_elapsed_time                  4 # total simulation time in seconds
-sim_inst_rate          2500000.0000 # simulation speed (in insts/sec)
+sim_elapsed_time                  5 # total simulation time in seconds
+sim_inst_rate          2000000.0000 # simulation speed (in insts/sec)
 sim_total_insn             11771574 # total number of instructions executed
 sim_total_refs              3210532 # total number of loads and stores executed
 sim_total_loads             2353714 # total number of loads executed
@@ -279,7 +279,7 @@ ld_target_big_endian              0 # target executable endian-ness, non-zero if
 mem.page_count                  289 # total number of pages allocated
 mem.page_mem                  1156k # total size of memory pages allocated
 mem.ptab_misses                 836 # total first level page table misses
-mem.ptab_accesses          76918535 # total page table accesses
+mem.ptab_accesses          76918543 # total page table accesses
 mem.ptab_miss_rate           0.0000 # first level page table miss rate
 
 Post-run go
