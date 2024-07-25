@@ -229,6 +229,10 @@ static int res_fpalu;
 /* total number of floating point multiplier/dividers available */
 static int res_fpmult;
 
+/* Reversible Branch Stream */
+//rbranch = (md_addr_t*) malloc(10000000 * sizeof(md_addr_t));
+
+
 /* text-based stat profiles */
 #define MAX_PCSTAT_VARS 8
 static int pcstat_nelt = 0;

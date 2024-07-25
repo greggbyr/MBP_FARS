@@ -1798,10 +1798,18 @@ bpred_update(struct bpred_t *pred,	/* branch predictor instance */
     }
 #endif /* RAS_BUG_COMPATIBLE */
 
+  int key;
+
+  /* Get keys before updating L1 table*/
+  if ((MD_OP_FLAGS(op) & (F_CTRL|F_UNCOND)) != (F_CTRL|F_UNCOND) && (pred->class == BPredTSBP)) {
+	// Get key before updating GHR!!!!
+        key = key_from_features (pred->dirpred.twolev, baddr); // Get unmasked key from GHR and PC
+  }
+
   /* update L1 table if appropriate */
   /* L1 table is updated unconditionally for combining predictor too */
   if ((MD_OP_FLAGS(op) & (F_CTRL|F_UNCOND)) != (F_CTRL|F_UNCOND) &&
-      (pred->class == BPred2Level))         
+      ((pred->class == BPred2Level) || (pred->class == BPredTSBP) || (pred->class == BPredMBP)))         
     {
       int l1index, shift_reg;
       
@@ -1816,15 +1824,15 @@ bpred_update(struct bpred_t *pred,	/* branch predictor instance */
 
   /***********************IF TS update L1 table as above, also update correctness buffer*****************************/
 	if ((MD_OP_FLAGS(op) & (F_CTRL|F_UNCOND)) != (F_CTRL|F_UNCOND) && (pred->class == BPredTSBP)) {
-		int l1index, shift_reg;
+		//int l1index, shift_reg;
 		
 		// Get key before updating GHR!!!!
-		int key = key_from_features (pred->dirpred.twolev, baddr); // Get unmasked key from GHR and PC
+		//int key = key_from_features (pred->dirpred.twolev, baddr); // Get unmasked key from GHR and PC
     
 		/* update L1 table, same as 2lev/comb predictors above this */
-		l1index = (baddr >> MD_BR_SHIFT) & (pred->dirpred.twolev->config.two.l1size - 1);
-		shift_reg = (pred->dirpred.twolev->config.two.shiftregs[l1index] << 1) | (!!taken);
-		pred->dirpred.twolev->config.two.shiftregs[l1index] = shift_reg & ((1 << pred->dirpred.twolev->config.two.shift_width) - 1);
+		//l1index = (baddr >> MD_BR_SHIFT) & (pred->dirpred.twolev->config.two.l1size - 1);
+		//shift_reg = (pred->dirpred.twolev->config.two.shiftregs[l1index] << 1) | (!!taken);
+		//pred->dirpred.twolev->config.two.shiftregs[l1index] = shift_reg & ((1 << pred->dirpred.twolev->config.two.shift_width) - 1);
 
 		int base_outcome;
 		int ts_outcome;
@@ -1873,15 +1881,15 @@ bpred_update(struct bpred_t *pred,	/* branch predictor instance */
   
   /***********************IF MBP update L1 table as above, also update correctness history table*****************************/
 	if ((MD_OP_FLAGS(op) & (F_CTRL|F_UNCOND)) != (F_CTRL|F_UNCOND) && (pred->class == BPredMBP)) {
-		int l1index, shift_reg;
+		//int l1index, shift_reg;
 		
 		// Get key before updating GHR!!!!
-		int key = key_from_features (pred->dirpred.twolev, baddr); // Get unmasked key from GHR and PC
+		//int key = key_from_features (pred->dirpred.twolev, baddr); // Get unmasked key from GHR and PC
 		
 		/* update L1 table, same as 2lev/comb predictors above this */
-		l1index = (baddr >> MD_BR_SHIFT) & (pred->dirpred.twolev->config.two.l1size - 1);
-		shift_reg = (pred->dirpred.twolev->config.two.shiftregs[l1index] << 1) | (!!taken);
-		pred->dirpred.twolev->config.two.shiftregs[l1index] = shift_reg & ((1 << pred->dirpred.twolev->config.two.shift_width) - 1);
+		//l1index = (baddr >> MD_BR_SHIFT) & (pred->dirpred.twolev->config.two.l1size - 1);
+		//shift_reg = (pred->dirpred.twolev->config.two.shiftregs[l1index] << 1) | (!!taken);
+		//pred->dirpred.twolev->config.two.shiftregs[l1index] = shift_reg & ((1 << pred->dirpred.twolev->config.two.shift_width) - 1);
 
 		int base_outcome;
 		int mbp_outcome;

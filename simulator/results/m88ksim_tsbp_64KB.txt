@@ -15,7 +15,7 @@ of SimpleScalar, LLC (info@simplescalar.com).
 
 sim: command line: /home/greggbyr/common/Documents/MBP_ReCISC/simulator/ss3/sim-outorder -max:inst 10000000 -bpred tsbp -bpred:tsbp 1 65536 16 1 16 run.m88ksim -c 
 
-sim: simulation started @ Tue Jul 16 19:45:35 2024, options follow:
+sim: simulation started @ Wed Jul 24 23:31:34 2024, options follow:
 
 sim-outorder: This simulator implements a very detailed out-of-order issue
 superscalar processor with a two-level memory system and speculative
@@ -155,31 +155,31 @@ sim_total_refs               173923 # total number of loads and stores executed
 sim_total_loads               96543 # total number of loads executed
 sim_total_stores         77380.0000 # total number of stores executed
 sim_total_branches           133427 # total number of branches executed
-sim_cycle                    422711 # total simulation time in cycles
+sim_cycle                    422687 # total simulation time in cycles
 sim_IPC                      1.2802 # instructions per cycle
-sim_CPI                      0.7812 # cycles per instruction
-sim_exec_BW                  1.4259 # total instructions (mis-spec + committed) per cycle
+sim_CPI                      0.7811 # cycles per instruction
+sim_exec_BW                  1.4260 # total instructions (mis-spec + committed) per cycle
 sim_IPB                      4.5342 # instruction per branch
-IFQ_count                    881397 # cumulative IFQ occupancy
-IFQ_fcount                   183010 # cumulative IFQ full count
-ifq_occupancy                2.0851 # avg IFQ occupancy (insn's)
-ifq_rate                     1.4259 # avg IFQ dispatch rate (insn/cycle)
-ifq_latency                  1.4623 # avg IFQ occupant latency (cycle's)
+IFQ_count                    881304 # cumulative IFQ occupancy
+IFQ_fcount                   182989 # cumulative IFQ full count
+ifq_occupancy                2.0850 # avg IFQ occupancy (insn's)
+ifq_rate                     1.4260 # avg IFQ dispatch rate (insn/cycle)
+ifq_latency                  1.4622 # avg IFQ occupant latency (cycle's)
 ifq_full                     0.4329 # fraction of time (cycle's) IFQ was full
-RUU_count                   3394439 # cumulative RUU occupancy
-RUU_fcount                   105877 # cumulative RUU full count
-ruu_occupancy                8.0302 # avg RUU occupancy (insn's)
-ruu_rate                     1.4259 # avg RUU dispatch rate (insn/cycle)
-ruu_latency                  5.6317 # avg RUU occupant latency (cycle's)
-ruu_full                     0.2505 # fraction of time (cycle's) RUU was full
-LSQ_count                    900414 # cumulative LSQ occupancy
+RUU_count                   3394043 # cumulative RUU occupancy
+RUU_fcount                   105850 # cumulative RUU full count
+ruu_occupancy                8.0297 # avg RUU occupancy (insn's)
+ruu_rate                     1.4260 # avg RUU dispatch rate (insn/cycle)
+ruu_latency                  5.6310 # avg RUU occupant latency (cycle's)
+ruu_full                     0.2504 # fraction of time (cycle's) RUU was full
+LSQ_count                    900316 # cumulative LSQ occupancy
 LSQ_fcount                    22707 # cumulative LSQ full count
-lsq_occupancy                2.1301 # avg LSQ occupancy (insn's)
-lsq_rate                     1.4259 # avg LSQ dispatch rate (insn/cycle)
-lsq_latency                  1.4939 # avg LSQ occupant latency (cycle's)
+lsq_occupancy                2.1300 # avg LSQ occupancy (insn's)
+lsq_rate                     1.4260 # avg LSQ dispatch rate (insn/cycle)
+lsq_latency                  1.4937 # avg LSQ occupant latency (cycle's)
 lsq_full                     0.0537 # fraction of time (cycle's) LSQ was full
-sim_slip                    4760152 # total number of slip cycles
-avg_sim_slip                 8.7966 # the average slip between issue and retirement
+sim_slip                    4759658 # total number of slip cycles
+avg_sim_slip                 8.7956 # the average slip between issue and retirement
 bpred_tsbp.lookups           137599 # total number of bpred lookups
 bpred_tsbp.updates           119345 # total number of updates
 bpred_tsbp.addr_hits         107286 # total number of address-predicted hits
@@ -218,8 +218,8 @@ bpred_tsbp.reverse_retstack_pops            0 # total number of reverse address 
 bpred_tsbp.reverse_used_ras.PP            0 # total number of reverse RAS predictions used
 bpred_tsbp.reverse_ras_hits.PP            0 # total number of reverse RAS hits
 bpred_tsbp.reverse_ras_rate.PP <error: divide by zero> # RAS prediction rate (i.e., RAS hits/used RAS)
-il1.accesses                 639873 # total number of accesses
-il1.hits                     620867 # total number of hits
+il1.accesses                 639877 # total number of accesses
+il1.hits                     620871 # total number of hits
 il1.misses                    19006 # total number of misses
 il1.replacements              18497 # total number of replacements
 il1.writebacks                    0 # total number of writebacks
@@ -248,8 +248,8 @@ ul2.miss_rate                0.1267 # miss rate (i.e., misses/ref)
 ul2.repl_rate                0.0225 # replacement rate (i.e., repls/ref)
 ul2.wb_rate                  0.0121 # writeback rate (i.e., wrbks/ref)
 ul2.inv_rate                 0.0000 # invalidation rate (i.e., invs/ref)
-itlb.accesses                639873 # total number of accesses
-itlb.hits                    639825 # total number of hits
+itlb.accesses                639877 # total number of accesses
+itlb.hits                    639829 # total number of hits
 itlb.misses                      48 # total number of misses
 itlb.replacements                 0 # total number of replacements
 itlb.writebacks                   0 # total number of writebacks
@@ -281,7 +281,7 @@ ld_target_big_endian              0 # target executable endian-ness, non-zero if
 mem.page_count                  167 # total number of pages allocated
 mem.page_mem                   668k # total size of memory pages allocated
 mem.ptab_misses                 208 # total first level page table misses
-mem.ptab_accesses           5717772 # total page table accesses
+mem.ptab_accesses           5717796 # total page table accesses
 mem.ptab_miss_rate           0.0000 # first level page table miss rate
 
 Post-run m88ksim
