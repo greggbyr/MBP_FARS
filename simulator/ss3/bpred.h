@@ -168,6 +168,15 @@ struct bpred_chbp_t {
   } chbp;
 };
 
+struct bpred_oht_t {
+  enum bpred_class class;				/* type of predictor */
+  struct {
+	unsigned int size;				/* outcome history table size, number of table entries */
+	int *oc;							/* outcome bits */
+	int *valid;							/* valid bits */
+  } oht;
+};
+
 /* branch predictor def */
 struct bpred_t {
   enum bpred_class class;	/* type of predictor */
@@ -175,8 +184,9 @@ struct bpred_t {
     struct bpred_dir_t *bimod;	  /* first direction predictor */
     struct bpred_dir_t *twolev;	  /* second direction predictor */
 	struct bpred_ts_t  *tsbp;	  /* temporal stream */
-	struct bpred_chbp_t *chbp;	  /* Mississippi branch predictor */
+	struct bpred_chbp_t *chbp;	  /* correction history branch predictor */
     struct bpred_dir_t *meta;	  /* meta predictor */
+	struct bpred_oht_t *oht;	  /* Outcome History Table (OHT) for use with reversible 2-level/MBP */
   } fwd_dirpred;
   
   /* Reversible Structs */
@@ -184,9 +194,27 @@ struct bpred_t {
     struct bpred_dir_t *bimod;	  /* first direction predictor */
     struct bpred_dir_t *twolev;	  /* second direction predictor */
 	struct bpred_ts_t  *tsbp;	  /* temporal stream */
-	struct bpred_chbp_t *chbp;	  /* Mississippi branch predictor */
+	struct bpred_chbp_t *chbp;	  /* correction history branch predictor */
     struct bpred_dir_t *meta;	  /* meta predictor */
+	struct bpred_oht_t *oht;	  /* Outcome History Table (OHT) for use with reversible 2-level/MBP */
   } rev_dirpred;
+  
+  /* Future History Buffer (FHB) for reversible 2-level/MBP */
+  struct {
+	int size;	/* number of FHB entries should be L1 width + 1 */
+	int *fv;    /* fwd valid bits for prediction use in fwd mode */
+	int *rv;    /* rev valid bits for prediction use in rev mode */
+	int *o;     /* outcome bits for prediction use in fwd & rev modes */
+	md_addr_t *addr;
+  } fhb;
+  
+  /* Outcome Buffer (OB) for use with reversible 2-level/MBP */
+  struct {
+	int width;	/* number of OB entries; independent of any L table dimenssions */
+	int *fv;    /* fwd valid bits for prediction use in fwd mode */
+	int *rv;    /* rev valid bits for prediction use in rev mode */
+	int *oc;     /* outcome bits for prediction use in fwd & rev modes */
+  } ob;
 
   struct {
     int sets;			/* num BTB sets */
@@ -298,12 +326,18 @@ bpred_ts_create (
   unsigned int head_table_width,	 	/* head table width */
   unsigned int head_table_size);			/* header table size */
 
-/* create a Mississippi branch direction predictor */
+/* create a correction history branch direction predictor */
 struct bpred_chbp_t *		/* temporal stream branch predictor instance */
 bpred_chbp_create (
   enum bpred_class class,	/* type of predictor to create */
   unsigned int chbp_enabled,              /* CHBP Enabled Flag */
   unsigned int cht_size);			/* header table size */
+  
+/* create an outcome history table predictor */
+struct bpred_oht_t *		/* outcome history table instance */
+bpred_oht_create (
+  enum bpred_class class,	/* type of predictor to create */
+  unsigned int oht_size);			/* OHT size */
 
 /* print branch predictor configuration */
 void

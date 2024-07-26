@@ -111,7 +111,7 @@ static int ruu_branch_penalty;
 /* speed of front-end of machine relative to execution core */
 static int fetch_speed;
 
-/* branch predictor type {nottaken|taken|perfect|bimod|2lev} */
+/* branch predictor type {nottaken|taken|perfect|bimod|2lev|comb|tsbp|chbp|oht|ob|mbp} */
 static char *pred_type;
 
 /* bimodal predictor config (<table_size>) */
@@ -874,7 +874,7 @@ sim_reg_options(struct opt_odb_t *odb)
                );
 
   opt_reg_string(odb, "-bpred",
-		 "branch predictor type {nottaken|taken|perfect|bimod|2lev|comb|tsbp|chbp}",
+		 "branch predictor type {nottaken|taken|perfect|bimod|2lev|comb|tsbp|chbp|oht|ob|mbp}",
                  &pred_type, /* default */"bimod",
                  /* print */TRUE, /* format */NULL);
 
@@ -886,6 +886,27 @@ sim_reg_options(struct opt_odb_t *odb)
 
   opt_reg_int_list(odb, "-bpred:2lev",
                    "2-level predictor config "
+		   "(<l1size> <l2size> <hist_size> <xor>)",
+                   twolev_config, twolev_nelt, &twolev_nelt,
+		   /* default */twolev_config,
+                   /* print */TRUE, /* format */NULL, /* !accrue */FALSE);
+				   
+  opt_reg_int_list(odb, "-bpred:oht",
+                   "2-level + OHT predictor config "
+		   "(<l1size> <l2size> <hist_size> <xor>)",
+                   twolev_config, twolev_nelt, &twolev_nelt,
+		   /* default */twolev_config,
+                   /* print */TRUE, /* format */NULL, /* !accrue */FALSE); 
+				   
+  opt_reg_int_list(odb, "-bpred:ob",
+                   "2-level + OB predictor config "
+		   "(<l1size> <l2size> <hist_size> <xor>)",
+                   twolev_config, twolev_nelt, &twolev_nelt,
+		   /* default */twolev_config,
+                   /* print */TRUE, /* format */NULL, /* !accrue */FALSE);
+  
+  opt_reg_int_list(odb, "-bpred:mbp",
+                   "MBP (2-level+OB+OHT) predictor config "
 		   "(<l1size> <l2size> <hist_size> <xor>)",
                    twolev_config, twolev_nelt, &twolev_nelt,
 		   /* default */twolev_config,
@@ -1214,7 +1235,7 @@ sim_check_options(struct opt_odb_t *odb,        /* options database */
     }
   else if (!mystricmp(pred_type, "chbp"))
     {
-      /* Mississippi branch predictor, bpred_create() checks args */
+      /* correctness history branch predictor, bpred_create() checks args */
       if (chbp_nelt != 5)
 	fatal("bad CHBP pred config (<l1size> <l2size> <hist_size> <xor> <cht_size>)");
       if (btb_nelt != 2)
@@ -1229,6 +1250,69 @@ sim_check_options(struct opt_odb_t *odb,        /* options database */
 			  /* history xor address */chbp_config[3],
 			  /* TSBP Header Width */0,
 			  /* CHBP CHT Size */chbp_config[4],
+			  /* btb sets */btb_config[0],
+			  /* btb assoc */btb_config[1],
+			  /* ret-addr stack size */ras_size);
+    }
+  else if (!mystricmp(pred_type, "oht"))
+    {
+      /* outcome history table branch predictor, bpred_create() checks args */
+      if (twolev_nelt != 4)
+	fatal("bad OHT pred config (<l1size> <l2size> <hist_size> <xor>)");
+      if (btb_nelt != 2)
+	fatal("bad btb config (<num_sets> <associativity>)");
+
+      pred = bpred_create(BPredOHT,
+			  /* bimod table size */0,
+			  /* 2lev l1 size */twolev_config[0],
+			  /* 2lev l2 size */twolev_config[1],
+			  /* meta table size */0,
+			  /* history reg size */twolev_config[2],
+			  /* history xor address */twolev_config[3],
+			  /* TSBP Header Width */0,
+			  /* CHBP CHT Size */0,
+			  /* btb sets */btb_config[0],
+			  /* btb assoc */btb_config[1],
+			  /* ret-addr stack size */ras_size);
+    }
+  else if (!mystricmp(pred_type, "ob"))
+    {
+      /* outcome history table branch predictor, bpred_create() checks args */
+      if (twolev_nelt != 4)
+	fatal("bad OB pred config (<l1size> <l2size> <hist_size> <xor>)");
+      if (btb_nelt != 2)
+	fatal("bad btb config (<num_sets> <associativity>)");
+
+      pred = bpred_create(BPredOB,
+			  /* bimod table size */0,
+			  /* 2lev l1 size */twolev_config[0],
+			  /* 2lev l2 size */twolev_config[1],
+			  /* meta table size */0,
+			  /* history reg size */twolev_config[2],
+			  /* history xor address */twolev_config[3],
+			  /* TSBP Header Width */0,
+			  /* CHBP CHT Size */0,
+			  /* btb sets */btb_config[0],
+			  /* btb assoc */btb_config[1],
+			  /* ret-addr stack size */ras_size);
+    }
+  else if (!mystricmp(pred_type, "mbp"))
+    {
+      /* outcome history table branch predictor, bpred_create() checks args */
+      if (twolev_nelt != 4)
+	fatal("bad MBP pred config (<l1size> <l2size> <hist_size> <xor>)");
+      if (btb_nelt != 2)
+	fatal("bad btb config (<num_sets> <associativity>)");
+
+      pred = bpred_create(BPredMBP,
+			  /* bimod table size */0,
+			  /* 2lev l1 size */twolev_config[0],
+			  /* 2lev l2 size */twolev_config[1],
+			  /* meta table size */0,
+			  /* history reg size */twolev_config[2],
+			  /* history xor address */twolev_config[3],
+			  /* TSBP Header Width */0,
+			  /* CHBP CHT Size */0,
 			  /* btb sets */btb_config[0],
 			  /* btb assoc */btb_config[1],
 			  /* ret-addr stack size */ras_size);
