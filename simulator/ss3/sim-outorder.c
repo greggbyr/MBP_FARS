@@ -422,6 +422,20 @@ static struct stat_stat_t *pcstat_sdists[MAX_PCSTAT_VARS];
 	 : (panic("bad stat class"), 0))))
 
 /* Reversible Stream */
+const char* intToConstChar(unsigned int num) { 
+    static char buffer[10]; // Assuming a maximum of 10 digits for the integer 
+    int i = 9; // Start filling the buffer from the end 
+ 
+    buffer[i] = '\0'; // Null-terminate the string 
+ 
+    do { 
+        buffer[--i] = '0' + (num % 10); // Convert the digit to its character representation 
+        num /= 10; 
+    } while (num != 0); 
+ 
+    return &buffer[i]; // Return a pointer to the beginning of the string 
+} 
+
 struct HashTable* btarget_hash;
 
 void init_btarget (void) {
@@ -429,110 +443,172 @@ void init_btarget (void) {
 }
 
 void set_btarget (md_addr_t baddr, md_addr_t btarget) {
-	insert(btarget_hash, baddr, btarget);
+        const char* baddr_str = intToConstChar(baddr);
+	const char* btarget_str = intToConstChar(btarget);
+
+	insert(btarget_hash, baddr_str, btarget_str);
 }
 
 md_addr_t get_btarget (md_addr_t baddr) {
-	md_addr_t btarget = retrieve(btarget_hash, baddr);
+    	const char* baddr_str = intToConstChar(baddr);
+
+	md_addr_t btarget = atoi(retrieve(btarget_hash, baddr_str));
 	
 	return btarget;
 }
 
+struct HashTable* is_call_hash;
+
+void init_is_call (void) {
+        is_call_hash = createHashTable(TABLE_SIZE);
+}
+
+void set_is_call (md_addr_t baddr, int is_call) {
+	const char* baddr_str = intToConstChar(baddr);
+	const char* is_call_str = intToConstChar(is_call);
+
+        insert(is_call_hash, baddr_str, is_call_str);
+}
+
+int get_is_call (md_addr_t baddr) {
+	const char* baddr_str = intToConstChar(baddr);
+
+        int is_call = atoi(retrieve(is_call_hash, baddr_str));
+
+        return is_call;
+}
+
+struct HashTable* is_return_hash;
+
+void init_is_return (void) {
+        is_return_hash = createHashTable(TABLE_SIZE);
+}
+
+void set_is_return (md_addr_t baddr, int is_return) {
+	const char* baddr_str = intToConstChar(baddr);
+        const char* is_return_str = intToConstChar(is_return);
+
+        insert(is_return_hash, baddr_str, is_return_str);
+}
+
+int get_is_return (md_addr_t baddr) {
+	const char* baddr_str = intToConstChar(baddr);
+
+        int is_return = atoi(retrieve(is_return_hash, baddr_str));
+
+        return is_return;
+}
+
+struct HashTable* last_stack_recover_idx_hash;
+
+void init_last_stack_recover_idx (void) {
+        last_stack_recover_idx_hash = createHashTable(TABLE_SIZE);
+}
+
+void set_last_stack_recover_idx (md_addr_t baddr, int last_stack_recover_idx) {
+	const char* baddr_str = intToConstChar(baddr);
+        const char* last_stack_recover_idx_str = intToConstChar(last_stack_recover_idx);
+
+        insert(last_stack_recover_idx_hash, baddr_str, last_stack_recover_idx_str);
+}
+
+int get_last_stack_recover_idx (md_addr_t baddr) {
+	const char* baddr_str = intToConstChar(baddr);
+
+        int last_stack_recover_idx = atoi(retrieve(last_stack_recover_idx_hash, baddr_str));
+
+        return last_stack_recover_idx;
+}
+
 struct outcome {
 	md_addr_t baddr;
-	md_addr_t btarget;
-	int taken;
 	enum md_opcode op;
+	struct bpred_update_t *dir_update;
 };
 
 struct outcome_history {
 	int MAX_HIST_CNT;
 	int length;
 	struct outcome *b_outcomes;
-}
+};
 
-struct outcome_history oh*;
+struct outcome_history oh;
 
 void init_outcome (void) {
-	oh->MAX_HIST_CNT = 2;
-	oh->length = 0;
-	oh->b_outcomes = (*outcome)malloc(sizeof(outcome) * oh->MAX_HIST_CNT);
+	oh.MAX_HIST_CNT = 2;
+	oh.length = 0;
+	oh.b_outcomes = calloc(oh.MAX_HIST_CNT, sizeof(struct outcome));
 }
 
-void append_outcome (md_addr_t fwd_baddr, md_addr_t fwd_btarget, int fwd_taken, enum md_opcode fwd_op) {
-	oh->length++;
+void append_outcome (md_addr_t fwd_baddr, enum md_opcode fwd_op, struct bpred_update_t *dir_update) {
+	oh.length++;
 	
-	if (oh->length > oh->MAX_HIST_CNT) {
-		struct outcome_history new_oh*;
+	if (oh.length > oh.MAX_HIST_CNT) {
+		struct outcome_history new_oh;
 		
-		new_oh->MAX_HIST_CNT = 2 * oh->MAX_HIST_CNT;
-		new_oh->length = oh->length - 1;
-		new_oh->b_outcomes = (*outcome)malloc(sizeof(outcome) * new_oh->MAX_HIST_CNT);
+		new_oh.MAX_HIST_CNT = 2 * oh.MAX_HIST_CNT;
+		new_oh.length = oh.length - 1;
+		new_oh.b_outcomes = calloc(new_oh.MAX_HIST_CNT, sizeof(struct outcome));
 		
-		for (int index = 0; index < new_oh->length; index++) {
-			new_oh->b_outcomes[index] = oh->b_outcomes[index];
+		for (int index = 0; index < new_oh.length; index++) {
+			new_oh.b_outcomes[index] = oh.b_outcomes[index];
 		}
-		
-		free(oh->b_outcomes);
-		
-		delete oh;
 		
 		oh = new_oh;
 		
-		oh->length++;
+		oh.length++;
 	}
 	
-	oh->b_outcomes[oh->length - 1]->baddr = fwd_baddr;
-	oh->b_outcomes[oh->length - 1]->btarget = fwd_btarget;
-	oh->b_outcomes[oh->length - 1]->taken = fwd_taken;
-	oh->b_outcomes[oh->length - 1]->op = fwd_op;
+	oh.b_outcomes[oh.length - 1].baddr = fwd_baddr;
+	oh.b_outcomes[oh.length - 1].op = fwd_op;
+	oh.b_outcomes[oh.length - 1].dir_update = dir_update;
 }
 
 struct outcome get_outcome (void) {
-	struct outcome *o;
-	
-	o->baddr = oh->b_outcomes[oh->length - 1]->baddr;
-	o->btarget = oh->b_outcomes[oh->length - 1]->btarget;
-	o->taken = oh->b_outcomes[oh->length - 1]->taken;
-	o->op = oh->b_outcomes[oh->length - 1]->op;
-	
-	oh->length--;
+	struct outcome o;
+
+	o.baddr = oh.b_outcomes[oh.length - 1].baddr;
+	o.op = oh.b_outcomes[oh.length - 1].op;
+	o.dir_update = oh.b_outcomes[oh.length - 1].dir_update;
+
+	oh.length--;
 	
 	return o;
-}	
+}
 
 /* Run reverse simulation of branch predictions */
 void reverse_flow (void) {
 	md_addr_t fwd_baddr;		/* branch address */
-	md_addr_t fwd_btarget;		/* resolved branch target */
 	md_addr_t fwd_act_btarget;		/* actual branch target */
-	int fwd_taken;			/* non-zero if branch was taken */
 	enum md_opcode fwd_op;		/* opcode of instruction */
 	struct bpred_update_t *rev_dir_update_ptr;  /* FWD pred state pointer */
-	int stack_recover_idx;
-	
-	rev_dir_update_ptr = &(fetch_data[fetch_tail].dir_update);
-	
-	stack_recover_idx = fetch_data[fetch_head].stack_recover_idx;
-	
-	while (outcome_length) {
+
+        md_addr_t rev_prd_btarget;              /* rev pred branch target */
+
+        int fwd_is_call;
+	int fwd_is_return;
+	int last_stack_recover_idx;
+
+	while (oh.length) {
 		struct outcome o = get_outcome();
 		
-		fwd_baddr = o->baddr;
-		fwd_btarget = o->btarget;
-		fwd_taken = o->taken;
-		fwd_op = o->op;
+		fwd_baddr = o.baddr;
+		fwd_op = o.op;
+		rev_dir_update_ptr = o.dir_update;
 		
 		fwd_act_btarget = get_btarget(fwd_baddr);
-		
+		fwd_is_call = get_is_call(fwd_baddr);
+		fwd_is_return = get_is_return(fwd_baddr);
+		last_stack_recover_idx = get_last_stack_recover_idx(fwd_baddr);
+
 		rev_prd_btarget = bpred_lookup(pred,
 			   /* branch address */fwd_baddr,
 			   /* target address */fwd_act_btarget,
 			   /* opcode */fwd_op,
-			   /* call? */MD_IS_CALL(fwd_op),
-			   /* return? */MD_IS_RETURN(fwd_op),
+			   /* call? */fwd_is_call,
+			   /* return? */fwd_is_return,
 			   /* updt */rev_dir_update_ptr,
-			   /* RSB index */&stack_recover_idx,
+			   /* RSB index */&last_stack_recover_idx,
 				   /* REV mode */ 1);
 				   
 		if (!rev_prd_btarget)
@@ -542,8 +618,8 @@ void reverse_flow (void) {
 	    }
 				   
 		bpred_update(pred,
-		       /* branch address */rs->PC,
-		       /* actual target address */fwd_baddr,
+		       /* branch address */fwd_baddr,
+		       /* actual target address */fwd_act_btarget,
                        /* taken? */fwd_act_btarget != (fwd_baddr +
                                                    sizeof(md_inst_t)),
                        /* pred taken? */rev_prd_btarget != (fwd_baddr +
@@ -2452,13 +2528,10 @@ ruu_commit(void)
 	  if (rs->next_PC != (rs->PC + sizeof(md_inst_t))) {
 		set_btarget(rs->PC, rs->next_PC);
 	  }
-	  
+	 
 	  append_outcome(/* branch address */rs->PC,
-					   /* actual target address */rs->next_PC,
-                       /* taken? */rs->next_PC != (rs->PC + sizeof(md_inst_t)),
-                       /* pred taken? */rs->pred_PC != (rs->PC + sizeof(md_inst_t)),
-                       /* correct pred? */rs->pred_PC == rs->next_PC,
-                       /* opcode */rs->op);
+                       /* opcode */rs->op,
+                       /* dir predictor update pointer */&rs->dir_update);
 	}
 
       /* invalidate RUU operation instance */
@@ -2655,11 +2728,8 @@ ruu_writeback(void)
 	  }
 	  
 	  append_outcome(/* branch address */rs->PC,
-					   /* actual target address */rs->next_PC,
-                       /* taken? */rs->next_PC != (rs->PC + sizeof(md_inst_t)),
-                       /* pred taken? */rs->pred_PC != (rs->PC + sizeof(md_inst_t)),
-                       /* correct pred? */rs->pred_PC == rs->next_PC,
-                       /* opcode */rs->op);
+		       /* opcode */rs->op,
+                       /* dir predictor update pointer */&rs->dir_update);
 	}
 
       /* entered writeback stage, indicate in pipe trace */
@@ -4182,8 +4252,8 @@ ruu_dispatch(void)
 	      lsq->in_LSQ = TRUE;
 	      lsq->ea_comp = FALSE;
 	      lsq->recover_inst = FALSE;
-	      lsq->dir_update.pdir1 = lsq->dir_update.pdir2 = NULL;
-	      lsq->dir_update.pmeta = NULL;
+	      lsq->dir_update.fwd_pdir1 = lsq->dir_update.fwd_pdir2 = NULL;
+	      lsq->dir_update.fwd_pmeta = NULL;
 	      lsq->stack_recover_idx = 0;
 	      lsq->spec_mode = spec_mode;
 	      lsq->addr = addr;
@@ -4314,12 +4384,9 @@ ruu_dispatch(void)
 			set_btarget(rs->PC, rs->next_PC);
 		  }
 		  
-		  append_outcome(/* branch address */rs->PC,
-						   /* actual target address */rs->next_PC,
-						   /* taken? */rs->next_PC != (rs->PC + sizeof(md_inst_t)),
-						   /* pred taken? */rs->pred_PC != (rs->PC + sizeof(md_inst_t)),
-						   /* correct pred? */rs->pred_PC == rs->next_PC,
-						   /* opcode */rs->op);
+		  append_outcome(/* branch address */regs.regs_PC,
+			         /* opcode */op,
+                                 /* dir predictor update pointer */&rs->dir_update);
 		}
 	    }
 
@@ -4527,7 +4594,7 @@ ruu_fetch(void)
 	  /* get the next predicted fetch address; only use branch predictor
 	     result for branches (assumes pre-decode bits); NOTE: returned
 	     value may be 1 if bpred can only predict a direction */
-	  if (MD_OP_FLAGS(op) & F_CTRL)
+	  if (MD_OP_FLAGS(op) & F_CTRL) {
 	    fetch_pred_PC =
 	      bpred_lookup(pred,
 			   /* branch address */fetch_regs_PC,
@@ -4538,8 +4605,13 @@ ruu_fetch(void)
 			   /* updt */&(fetch_data[fetch_tail].dir_update),
 			   /* RSB index */&stack_recover_idx,
 				   /* FWD mode */ 0);
-	  else
+
+	  	set_last_stack_recover_idx(fetch_regs_PC, stack_recover_idx);
+		set_is_call(fetch_regs_PC, MD_IS_CALL(op));
+		set_is_return(fetch_regs_PC, MD_IS_RETURN(op));
+	  } else {
 	    fetch_pred_PC = 0;
+	  }
 
 	  /* valid address returned from branch predictor? */
 	  if (!fetch_pred_PC)
@@ -4673,6 +4745,9 @@ sim_main(void)
 {
 	init_outcome();
 	init_btarget();
+	init_is_call();
+	init_is_return();
+	init_last_stack_recover_idx();
 	
   /* ignore any floating point exceptions, they may occur on mis-speculated
      execution paths */
@@ -4849,13 +4924,13 @@ sim_main(void)
       sim_cycle++;
 
       /* finish early? */
-      if (max_insts && sim_num_insn >= max_insts)
-		  reverse_flow();
-	  
-		  freeHashTable(btarget_hash);
-	return;
+      if (max_insts && sim_num_insn >= max_insts){
+		reverse_flow();
+		//freeHashTable(btarget_hash);
+		return;
+   	}
     }
 	
 	reverse_flow();
-	freeHashTable(btarget_hash);
+	//freeHashTable(btarget_hash);
 }

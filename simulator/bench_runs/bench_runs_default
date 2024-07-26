@@ -1,1 +1,0 @@
-ls bench/little/ | xargs -I % csh -c 'basename % .ss' | xargs -I % csh -c 'grep "%\..ext" bench.db' | grep -oP 'BINARIES\{"\K\w+' | xargs -I % csh -c 'echo "running cmd for %"; ./Run.pl -db ./bench.db -dir ./results/%_default -benchmark % -sim `pwd`/ss3/sim-outorder -args "-max:inst 10000000" >& ./results/%_default.txt'

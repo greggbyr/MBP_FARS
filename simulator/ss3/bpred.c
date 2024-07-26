@@ -91,6 +91,10 @@ bpred_create(enum bpred_class class,	/* type of predictor to create */
     pred->fwd_dirpred.bimod = 
       bpred_dir_create(BPred2bit, bimod_size, 0, 0, 0);
 
+    //Need reverse bimod now too
+    pred->rev_dirpred.bimod =
+      bpred_dir_create(BPred2bit, bimod_size, 0, 0, 0);
+
     /* 2-level component */
     pred->fwd_dirpred.twolev = 
       bpred_dir_create(BPred2Level, l1size, l2size, shift_width, xor);
@@ -127,6 +131,9 @@ bpred_create(enum bpred_class class,	/* type of predictor to create */
     pred->fwd_dirpred.bimod = 
       bpred_dir_create(class, bimod_size, 0, 0, 0);
 
+    //Need reverse bimod now too
+    pred->rev_dirpred.bimod =
+      bpred_dir_create(BPred2bit, bimod_size, 0, 0, 0);
   case BPredTaken:
   case BPredNotTaken:
     /* no other state */
@@ -1260,7 +1267,7 @@ bpred_lookup(struct bpred_t *pred,	/* branch predictor instance */
 		  }
 		  else
 		  {
-			return ((*(dir_update_ptr->fwd_pdir1) >= 2)
+			return ((*(dir_update_ptr->rev_pdir1) >= 2)
 				  ? /* taken */ pbtb->target
 				  : /* not taken */ 0);
 		  }

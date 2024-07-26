@@ -338,8 +338,8 @@ bpred_lookup(struct bpred_t *pred,	/* branch predictor instance */
 	     int is_call,		/* non-zero if inst is fn call */
 	     int is_return,		/* non-zero if inst is fn return */
 	     struct bpred_update_t *dir_update_ptr, /* pred state pointer */
-	     int *stack_recover_idx);	/* Non-speculative top-of-stack;
-					 * used on mispredict recovery */
+	     int *stack_recover_idx,	/* Non-speculative top-of-stack; * used on mispredict recovery */
+		 int flow_mode);  /* Flow mode (0=FWD; 1=REV) */
 
 /* Speculative execution can corrupt the ret-addr stack.  So for each
  * lookup we return the top-of-stack (TOS) at that point; a mispredicted
@@ -367,7 +367,8 @@ bpred_update(struct bpred_t *pred,	/* branch predictor instance */
 	     int pred_taken,		/* non-zero if branch was pred taken */
 	     int correct,		/* was earlier prediction correct? */
 	     enum md_opcode op,		/* opcode of instruction */
-	     struct bpred_update_t *dir_update_ptr); /* pred state pointer */
+	     struct bpred_update_t *dir_update_ptr, /* pred state pointer */
+		 int flow_mode);  /* Flow mode (0=FWD; 1=REV) */
 
 
 #ifdef foo0
