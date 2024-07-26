@@ -801,19 +801,19 @@ bpred_after_priming(struct bpred_t *bpred)
   bpred->ras_hits = 0;
   
 	/* Reverse Stats */ //Set to 1 for now to avoid runtime issues
-  bpred->reverse_lookups = 1;
-  bpred->reverse_addr_hits = 1;
-  bpred->reverse_dir_hits = 1;
-  bpred->reverse_used_ras = 1;
-  bpred->reverse_used_bimod = 1;
-  bpred->reverse_used_2lev = 1;
-  bpred->reverse_jr_hits = 1;
-  bpred->reverse_jr_seen = 1;
-  bpred->reverse_misses = 1;
-  bpred->reverse_replays = 1;
-  bpred->reverse_retstack_pops = 1;
-  bpred->reverse_retstack_pushes = 1;
-  bpred->reverse_ras_hits = 1;
+  bpred->reverse_lookups = 0;
+  bpred->reverse_addr_hits = 0;
+  bpred->reverse_dir_hits = 0;
+  bpred->reverse_used_ras = 0;
+  bpred->reverse_used_bimod = 0;
+  bpred->reverse_used_2lev = 0;
+  bpred->reverse_jr_hits = 0;
+  bpred->reverse_jr_seen = 0;
+  bpred->reverse_misses = 0;
+  bpred->reverse_replays = 0;
+  bpred->reverse_retstack_pops = 0;
+  bpred->reverse_retstack_pushes = 0;
+  bpred->reverse_ras_hits = 0;
 }
 
 #define BIMOD_HASH(PRED, ADDR)						\
@@ -949,7 +949,7 @@ bpred_lookup(struct bpred_t *pred,	/* branch predictor instance */
 	   if ((btarget != 0) && (btarget != (baddr + sizeof(md_inst_t)))) {
 		   rbaddr = btarget;
 	   } else { /* btarget was never set anywhere, resorting to checking FWD predictor just to simulate for now */
-		   flow_mode = 0;
+		   rbaddr = NULL;
 	   }
    } else {
 	   rbaddr = pbtb->target;
@@ -957,7 +957,10 @@ bpred_lookup(struct bpred_t *pred,	/* branch predictor instance */
 
   if (!flow_mode) {
 	pred->lookups++;
-	
+  } else {
+	pred->reverse_lookups++;
+  }
+
 	dir_update_ptr->fwd_dir.ras = FALSE;
 	  dir_update_ptr->fwd_pdir1 = NULL;
 	  dir_update_ptr->fwd_pdir2 = NULL;
@@ -1057,14 +1060,14 @@ bpred_lookup(struct bpred_t *pred,	/* branch predictor instance */
 		default:
 		  panic("bogus predictor class");
 	  }
-  } else {
-	  pred->reverse_lookups++;
-	
+  	
 	  dir_update_ptr->rev_dir.ras = FALSE;
 	  dir_update_ptr->rev_pdir1 = NULL;
 	  dir_update_ptr->rev_pdir2 = NULL;
 	  dir_update_ptr->rev_pmeta = NULL;
 	  
+	// only if rbaddr is available 
+	if (rbaddr) {
 	  /* Except for jumps, get a pointer to direction-prediction bits */
 	  switch (pred->class) {
 		case BPredComb:
@@ -1160,8 +1163,9 @@ bpred_lookup(struct bpred_t *pred,	/* branch predictor instance */
 		default:
 		  panic("bogus predictor class");
 	  }
-  }
+	}
 	
+if (!flow) {
   /*
    * We have a stateful predictor, and have gotten a pointer into the
    * direction predictor (except for jumps, for which the ptr is null)
@@ -1196,6 +1200,43 @@ bpred_lookup(struct bpred_t *pred,	/* branch predictor instance */
 	  pred->retstack_pushes++;
 	}
 #endif /* !RAS_BUG_COMPATIBLE */
+} else {
+  /*
+   * We have a stateful predictor, and have gotten a pointer into the
+   * direction predictor (except for jumps, for which the ptr is null)
+   */
+
+  /* record pre-pop TOS; if this branch is executed speculatively
+   * and is squashed, we'll restore the TOS and hope the data
+   * wasn't corrupted in the meantime. */
+  if (pred->retstack.size)
+	*stack_recover_idx = pred->retstack.tos;
+  else
+	*stack_recover_idx = 0;
+
+	/* Since this is reversed, return constitutes a push and call a pop  */
+
+  /* if this is a return, pop return-address stack */
+  if (is_return && pred->retstack.size)
+	{
+	  md_addr_t target = pred->retstack.stack[pred->retstack.tos].target;
+	  pred->retstack.tos = (pred->retstack.tos + pred->retstack.size - 1) % pred->retstack.size;
+	  pred->reverse_retstack_pushes++;
+	  return target;
+	}
+
+#ifndef RAS_BUG_COMPATIBLE
+  /* if function call, push return-address onto return-address stack */
+  if (is_call && pred->retstack.size)
+	{
+	  pred->retstack.tos = (pred->retstack.tos + 1)% pred->retstack.size;
+	  pred->retstack.stack[pred->retstack.tos].target = 
+	baddr + sizeof(md_inst_t);
+	  pred->reverse_retstack_pops++;
+	  dir_update_ptr->rev_dir.ras = TRUE; /* using RAS here */
+	}
+#endif /* !RAS_BUG_COMPATIBLE */
+}
   
   /* Where BB code was originally */
 
@@ -1206,7 +1247,7 @@ bpred_lookup(struct bpred_t *pred,	/* branch predictor instance */
 	}
 		
   /* otherwise we have a conditional branch */
-  if (!flow_mode) {
+  if (!flow_mode || dir_update_ptr->rev_pdir1 == NULL) {
 	  if (pbtb == NULL)
 		{
 		  /* BTB miss -- just return a predicted direction */
