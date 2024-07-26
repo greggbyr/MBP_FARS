@@ -1165,7 +1165,7 @@ bpred_lookup(struct bpred_t *pred,	/* branch predictor instance */
 	  }
 	}
 	
-if (!flow) {
+if (!flow_mode) {
   /*
    * We have a stateful predictor, and have gotten a pointer into the
    * direction predictor (except for jumps, for which the ptr is null)
