@@ -15,7 +15,7 @@ of SimpleScalar, LLC (info@simplescalar.com).
 
 sim: command line: /home/greggbyr/common/Documents/MBP_FARS/simulator/ss3/sim-outorder -max:inst 10000000 -bpred bimod -bpred:bimod 524288 run.ijpeg -image_file vigo.ppm -compression.quality 90 -compression.optimize_coding 0 -compression.smoothing_factor 90 -difference.image 1 -difference.x_stride 10 -difference.y_stride 10 -verbose 1 -GO.findoptcomp 
 
-sim: simulation started @ Thu Jul 25 19:08:20 2024, options follow:
+sim: simulation started @ Fri Jul 26 02:46:55 2024, options follow:
 
 sim-outorder: This simulator implements a very detailed out-of-order issue
 superscalar processor with a two-level memory system and speculative
@@ -40,9 +40,12 @@ latency of all pipeline operations.
 -fetch:ifqsize              4 # instruction fetch queue size (in insts)
 -fetch:mplat                3 # extra branch mis-prediction latency
 -fetch:speed                1 # speed of front-end of machine relative to execution core
--bpred                  bimod # branch predictor type {nottaken|taken|perfect|bimod|2lev|comb|tsbp|chbp}
+-bpred                  bimod # branch predictor type {nottaken|taken|perfect|bimod|2lev|comb|tsbp|chbp|oht|ob|mbp}
 -bpred:bimod     524288 # bimodal predictor config (<table size>)
 -bpred:2lev      1 1024 8 0 # 2-level predictor config (<l1size> <l2size> <hist_size> <xor>)
+-bpred:oht       1 1024 8 0 # 2-level + OHT predictor config (<l1size> <l2size> <hist_size> <xor>)
+-bpred:ob        1 1024 8 0 # 2-level + OB predictor config (<l1size> <l2size> <hist_size> <xor>)
+-bpred:mbp       1 1024 8 0 # MBP (2-level+OB+OHT) predictor config (<l1size> <l2size> <hist_size> <xor>)
 -bpred:tsbp      1 16384 14 1 16384 # TSBP predictor config (<l1size> <l2size> <hist_size> <xor> <head_table_width>)
 -bpred:chbp      1 16384 14 1 16384 # CHBP config (<l1size> <l2size> <hist_size> <xor> <cht_size>)
 -bpred:comb      1024 # combining predictor config (<meta_table_size>)
@@ -178,7 +181,7 @@ lsq_latency                  2.3456 # avg LSQ occupant latency (cycle's)
 lsq_full                     0.2093 # fraction of time (cycle's) LSQ was full
 sim_slip                   96641863 # total number of slip cycles
 avg_sim_slip                 9.6642 # the average slip between issue and retirement
-bpred_bimod.lookups         2284140 # total number of bpred lookups
+bpred_bimod.lookups         2284044 # total number of bpred lookups
 bpred_bimod.updates         2283503 # total number of updates
 bpred_bimod.addr_hits       2283129 # total number of address-predicted hits
 bpred_bimod.dir_hits        2283264 # total number of direction-predicted hits (includes addr-hits)
@@ -196,9 +199,9 @@ bpred_bimod.retstack_pops       427816 # total number of address popped off of r
 bpred_bimod.used_ras.PP       427815 # total number of RAS predictions used
 bpred_bimod.ras_hits.PP       427809 # total number of RAS hits
 bpred_bimod.ras_rate.PP    1.0000 # RAS prediction rate (i.e., RAS hits/used RAS)
-bpred_bimod.reverse_lookups      2283407 # total number of reverse bpred lookups
+bpred_bimod.reverse_lookups      2283503 # total number of reverse bpred lookups
 bpred_bimod.reverse_updates      2283503 # total number of reverse updates
-bpred_bimod.reverse_addr_hits           55 # total number of reverse address-predicted hits
+bpred_bimod.reverse_addr_hits           57 # total number of reverse address-predicted hits
 bpred_bimod.reverse_dir_hits      2283503 # total number of reverse direction-predicted hits (includes addr-hits)
 bpred_bimod.reverse_misses            0 # total number of reverse misses
 bpred_bimod.reverse_jr_hits            1 # total number of reverse address-predicted hits for JR's
@@ -277,7 +280,7 @@ ld_target_big_endian              0 # target executable endian-ness, non-zero if
 mem.page_count                  473 # total number of pages allocated
 mem.page_mem                  1892k # total size of memory pages allocated
 mem.ptab_misses                 481 # total first level page table misses
-mem.ptab_accesses          70270670 # total page table accesses
+mem.ptab_accesses          70270674 # total page table accesses
 mem.ptab_miss_rate           0.0000 # first level page table miss rate
 
 Post-run ijpeg

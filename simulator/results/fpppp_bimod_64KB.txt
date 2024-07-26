@@ -14,7 +14,7 @@ of SimpleScalar, LLC (info@simplescalar.com).
 
 sim: command line: /home/greggbyr/common/Documents/MBP_FARS/simulator/ss3/sim-outorder -max:inst 10000000 -bpred bimod -bpred:bimod 65536 run.fpppp 
 
-sim: simulation started @ Thu Jul 25 19:05:10 2024, options follow:
+sim: simulation started @ Fri Jul 26 02:43:46 2024, options follow:
 
 sim-outorder: This simulator implements a very detailed out-of-order issue
 superscalar processor with a two-level memory system and speculative
@@ -39,9 +39,12 @@ latency of all pipeline operations.
 -fetch:ifqsize              4 # instruction fetch queue size (in insts)
 -fetch:mplat                3 # extra branch mis-prediction latency
 -fetch:speed                1 # speed of front-end of machine relative to execution core
--bpred                  bimod # branch predictor type {nottaken|taken|perfect|bimod|2lev|comb|tsbp|chbp}
+-bpred                  bimod # branch predictor type {nottaken|taken|perfect|bimod|2lev|comb|tsbp|chbp|oht|ob|mbp}
 -bpred:bimod     65536 # bimodal predictor config (<table size>)
 -bpred:2lev      1 1024 8 0 # 2-level predictor config (<l1size> <l2size> <hist_size> <xor>)
+-bpred:oht       1 1024 8 0 # 2-level + OHT predictor config (<l1size> <l2size> <hist_size> <xor>)
+-bpred:ob        1 1024 8 0 # 2-level + OB predictor config (<l1size> <l2size> <hist_size> <xor>)
+-bpred:mbp       1 1024 8 0 # MBP (2-level+OB+OHT) predictor config (<l1size> <l2size> <hist_size> <xor>)
 -bpred:tsbp      1 16384 14 1 16384 # TSBP predictor config (<l1size> <l2size> <hist_size> <xor> <head_table_width>)
 -bpred:chbp      1 16384 14 1 16384 # CHBP config (<l1size> <l2size> <hist_size> <xor> <cht_size>)
 -bpred:comb      1024 # combining predictor config (<meta_table_size>)
@@ -286,7 +289,7 @@ ld_target_big_endian              0 # target executable endian-ness, non-zero if
 mem.page_count                   87 # total number of pages allocated
 mem.page_mem                   348k # total size of memory pages allocated
 mem.ptab_misses                  96 # total first level page table misses
-mem.ptab_accesses           1916297 # total page table accesses
+mem.ptab_accesses           1916301 # total page table accesses
 mem.ptab_miss_rate           0.0001 # first level page table miss rate
 
 ****** program returns ERROR 256

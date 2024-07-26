@@ -1,0 +1,14 @@
+ls bench/little/ | xargs -I % csh -c 'basename % .ss' | xargs -I % csh -c 'grep "%\..ext" bench.db' | grep -oP 'BINARIES\{"\K\w+' | xargs -I % csh -c 'echo "running cmd for % ob at 16KB"; ./Run.pl -db ./bench.db -dir ./results/%_ob_16KB -benchmark % -sim `pwd`/ss3/sim-outorder -args "-max:inst 10000000 -bpred ob -bpred:ob 1 16384 14 1" >& ./results/%_ob_16KB.txt'
+
+ls bench/little/ | xargs -I % csh -c 'basename % .ss' | xargs -I % csh -c 'grep "%\..ext" bench.db' | grep -oP 'BINARIES\{"\K\w+' | xargs -I % csh -c 'echo "running cmd for % ob at 32 KB"; ./Run.pl -db ./bench.db -dir ./results/%_ob_32KB -benchmark % -sim `pwd`/ss3/sim-outorder -args "-max:inst 10000000 -bpred ob -bpred:ob 1 32768 15 1" >& ./results/%_ob_32KB.txt'
+
+ls bench/little/ | xargs -I % csh -c 'basename % .ss' | xargs -I % csh -c 'grep "%\..ext" bench.db' | grep -oP 'BINARIES\{"\K\w+' | xargs -I % csh -c 'echo "running cmd for % ob at 64 KB"; ./Run.pl -db ./bench.db -dir ./results/%_ob_64KB -benchmark % -sim `pwd`/ss3/sim-outorder -args "-max:inst 10000000 -bpred ob -bpred:ob 1 65536 16 1" >& ./results/%_ob_64KB.txt'
+
+ls bench/little/ | xargs -I % csh -c 'basename % .ss' | xargs -I % csh -c 'grep "%\..ext" bench.db' | grep -oP 'BINARIES\{"\K\w+' | xargs -I % csh -c 'echo "running cmd for % ob at 128 KB"; ./Run.pl -db ./bench.db -dir ./results/%_ob_128KB -benchmark % -sim `pwd`/ss3/sim-outorder -args "-max:inst 10000000 -bpred ob -bpred:ob 1 131072 17 1" >& ./results/%_ob_128KB.txt'
+
+ls bench/little/ | xargs -I % csh -c 'basename % .ss' | xargs -I % csh -c 'grep "%\..ext" bench.db' | grep -oP 'BINARIES\{"\K\w+' | xargs -I % csh -c 'echo "running cmd for % ob at 256 KB"; ./Run.pl -db ./bench.db -dir ./results/%_ob_256KB -benchmark % -sim `pwd`/ss3/sim-outorder -args "-max:inst 10000000 -bpred ob -bpred:ob 1 262144 18 1" >& ./results/%_ob_256KB.txt'
+
+ls bench/little/ | xargs -I % csh -c 'basename % .ss' | xargs -I % csh -c 'grep "%\..ext" bench.db' | grep -oP 'BINARIES\{"\K\w+' | xargs -I % csh -c 'echo "running cmd for % ob at 512 KB"; ./Run.pl -db ./bench.db -dir ./results/%_ob_512KB -benchmark % -sim `pwd`/ss3/sim-outorder -args "-max:inst 10000000 -bpred ob -bpred:ob 1 524288 19 1" >& ./results/%_ob_512KB.txt'
+
+ls bench/little/ | xargs -I % csh -c 'basename % .ss' | xargs -I % csh -c 'grep "%\..ext" bench.db' | grep -oP 'BINARIES\{"\K\w+' | xargs -I % csh -c 'echo "running cmd for % ob at 1 MB"; ./Run.pl -db ./bench.db -dir ./results/%_ob_1MB -benchmark % -sim `pwd`/ss3/sim-outorder -args "-max:inst 10000000 -bpred ob -bpred:ob 1 1048576 20 1" >& ./results/%_ob_1MB.txt'
+

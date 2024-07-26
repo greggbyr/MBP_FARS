@@ -115,7 +115,7 @@ bpred_create(enum bpred_class class,	/* type of predictor to create */
 	if (!(pred->fhb.o = calloc(pred->fhb.size, sizeof(int))))
 		fatal("cannot allocate FHB O bits");
 	
-	if (!(pred->fhb.addr = calloc(pred->fhb.size, sizeof(struct md_addr_t))))
+	if (!(pred->fhb.addr = calloc(pred->fhb.size, sizeof(md_addr_t))))
 		fatal("cannot allocate FHB ADDR bits");
 
     /* metapredictor component */
@@ -148,7 +148,7 @@ bpred_create(enum bpred_class class,	/* type of predictor to create */
 	if (!(pred->fhb.o = calloc(pred->fhb.size, sizeof(int))))
 		fatal("cannot allocate FHB O bits");
 	
-	if (!(pred->fhb.addr = calloc(pred->fhb.size, sizeof(struct md_addr_t))))
+	if (!(pred->fhb.addr = calloc(pred->fhb.size, sizeof(md_addr_t))))
 		fatal("cannot allocate FHB ADDR bits");
     break;
 	
@@ -172,13 +172,13 @@ bpred_create(enum bpred_class class,	/* type of predictor to create */
 	if (!(pred->fhb.o = calloc(pred->fhb.size, sizeof(int))))
 		fatal("cannot allocate FHB O bits");
 	
-	if (!(pred->fhb.addr = calloc(pred->fhb.size, sizeof(struct md_addr_t))))
+	if (!(pred->fhb.addr = calloc(pred->fhb.size, sizeof(md_addr_t))))
 		fatal("cannot allocate FHB ADDR bits");
 	
 	// Outcome Buffer (OB)
 	pred->ob.width = 16384; /* hardcoding to 16 kb for now, will make configurable later */
 	
-	pred->ob.pointer = 0;	/* start off pointer at 0 */
+	//pred->ob.pointer = 0;	/* start off pointer at 0 */
 	
 	if (!(pred->ob.fv = calloc(pred->ob.width, sizeof(int))))
 		fatal("cannot allocate OB FV bits");
@@ -211,7 +211,7 @@ bpred_create(enum bpred_class class,	/* type of predictor to create */
 	if (!(pred->fhb.o = calloc(pred->fhb.size, sizeof(int))))
 		fatal("cannot allocate FHB O bits");
 	
-	if (!(pred->fhb.addr = calloc(pred->fhb.size, sizeof(struct md_addr_t))))
+	if (!(pred->fhb.addr = calloc(pred->fhb.size, sizeof(md_addr_t))))
 		fatal("cannot allocate FHB ADDR bits");
 	
 	//Need FWD and REV OHTs
@@ -243,7 +243,7 @@ bpred_create(enum bpred_class class,	/* type of predictor to create */
 	if (!(pred->fhb.o = calloc(pred->fhb.size, sizeof(int))))
 		fatal("cannot allocate FHB O bits");
 	
-	if (!(pred->fhb.addr = calloc(pred->fhb.size, sizeof(struct md_addr_t))))
+	if (!(pred->fhb.addr = calloc(pred->fhb.size, sizeof(md_addr_t))))
 		fatal("cannot allocate FHB ADDR bits");
 	
 	//Need FWD and REV OHTs
@@ -257,7 +257,7 @@ bpred_create(enum bpred_class class,	/* type of predictor to create */
 	// Outcome Buffer (OB)
 	pred->ob.width = 16384; /* hardcoding to 16 kb for now, will make configurable later */
 	
-	pred->ob.pointer = 0;	/* start off pointer at 0 */
+	//pred->ob.pointer = 0;	/* start off pointer at 0 */
 	
 	if (!(pred->ob.fv = calloc(pred->ob.width, sizeof(int))))
 		fatal("cannot allocate OB FV bits");
@@ -309,6 +309,9 @@ bpred_create(enum bpred_class class,	/* type of predictor to create */
   case BPredTSBP:
   case BPredCHBP:
   case BPred2bit:
+  case BPredOB:
+  case BPredOHT:
+  case BPredMBP:
     {
       int i;
 
@@ -621,7 +624,28 @@ bpred_dir_config(
       name, pred_dir->config.two.l1size, pred_dir->config.two.shift_width,
       pred_dir->config.two.xor ? "" : "no", pred_dir->config.two.l2size);
     break;
-	
+
+  case BPredOB:
+    fprintf(stream,
+      "pred_dir: %s: 2-lvl: %d l1-sz, %d bits/ent, %s xor, %d l2-sz, direct-mapped\n",
+      name, pred_dir->config.two.l1size, pred_dir->config.two.shift_width,
+      pred_dir->config.two.xor ? "" : "no", pred_dir->config.two.l2size);
+    break;
+
+  case BPredOHT:
+    fprintf(stream,
+      "pred_dir: %s: 2-lvl: %d l1-sz, %d bits/ent, %s xor, %d l2-sz, direct-mapped\n",
+      name, pred_dir->config.two.l1size, pred_dir->config.two.shift_width,
+      pred_dir->config.two.xor ? "" : "no", pred_dir->config.two.l2size);
+    break;
+
+  case BPredMBP:
+    fprintf(stream,
+      "pred_dir: %s: 2-lvl: %d l1-sz, %d bits/ent, %s xor, %d l2-sz, direct-mapped\n",
+      name, pred_dir->config.two.l1size, pred_dir->config.two.shift_width,
+      pred_dir->config.two.xor ? "" : "no", pred_dir->config.two.l2size);
+    break;
+
   case BPredTSBP:
     fprintf(stream,
       "pred_dir: %s: 2-lvl: %d l1-sz, %d bits/ent, %s xor, %d l2-sz, direct-mapped\n",
@@ -701,6 +725,27 @@ bpred_config(struct bpred_t *pred,	/* branch predictor instance */
     fprintf(stream, "ret_stack: %d entries", pred->retstack.size);
     break;
 	
+  case BPredOB:
+    bpred_dir_config (pred->fwd_dirpred.twolev, "2lev", stream);
+    fprintf(stream, "btb: %d sets x %d associativity",
+            pred->btb.sets, pred->btb.assoc);
+    fprintf(stream, "ret_stack: %d entries", pred->retstack.size);
+    break;
+
+  case BPredOHT:
+    bpred_dir_config (pred->fwd_dirpred.twolev, "2lev", stream);
+    fprintf(stream, "btb: %d sets x %d associativity",
+            pred->btb.sets, pred->btb.assoc);
+    fprintf(stream, "ret_stack: %d entries", pred->retstack.size);
+    break;
+  
+  case BPredMBP:
+    bpred_dir_config (pred->fwd_dirpred.twolev, "2lev", stream);
+    fprintf(stream, "btb: %d sets x %d associativity",
+            pred->btb.sets, pred->btb.assoc);
+    fprintf(stream, "ret_stack: %d entries", pred->retstack.size);
+    break;
+
   case BPredTSBP:
     bpred_dir_config (pred->fwd_dirpred.twolev, "2lev", stream);
 	bpred_ts_config (pred->fwd_dirpred.tsbp, "tsbp", stream);
@@ -769,6 +814,15 @@ bpred_reg_stats(struct bpred_t *pred,	/* branch predictor instance */
       break;
     case BPred2Level:
       name = "bpred_2lev";
+      break;
+     case BPredOB:
+      name = "bpred_ob";
+      break;
+     case BPredOHT:
+      name = "bpred_oht";
+      break;
+     case BPredMBP:
+      name = "bpred_mbp";
       break;
 	case BPredTSBP:
       name = "bpred_tsbp";
@@ -1052,7 +1106,10 @@ bpred_dir_lookup(struct bpred_dir_t *pred_dir,	/* branch dir predictor inst */
 
   /* Except for jumps, get a pointer to direction-prediction bits */
   switch (pred_dir->class) {
-    case BPred2Level:  
+    case BPred2Level:
+    case BPredOB:
+    case BPredOHT:
+    case BPredMBP:  
     case BPredTSBP:         /*Add TSBP case, should be same as 2 level to get base prediction*/
 	case BPredCHBP:         /*Add CHBP case, should be same as 2 level to get base prediction*/
       {
@@ -2114,27 +2171,27 @@ bpred_update(struct bpred_t *pred,	/* branch predictor instance */
 	
 	/* Update OB if OB or MBP */
 	if ((MD_OP_FLAGS(op) & (F_CTRL|F_UNCOND)) != (F_CTRL|F_UNCOND) && ((pred->class == BPredOB) || (pred->class == BPredMBP))) {
-		//Update OHT and shift up (right) or down (left) depending on flow mode
+		//Update OB and shift up (right) or down (left) depending on flow mode
 		if (!flow_mode) {
-			for (int i = pred->oht->oht.width; i > 1; i--) {
-				pred->oht->oht.fv[i - 1] = pred->oht->oht.fv[i - 2];
-				pred->oht->oht.rv[i - 1] = pred->oht->oht.rv[i - 2];
-				pred->oht->oht.oc[i - 1] = pred->oht->oht.oc[i - 2];
+			for (int i = pred->ob.width; i > 1; i--) {
+				pred->ob.fv[i - 1] = pred->ob.fv[i - 2];
+				pred->ob.rv[i - 1] = pred->ob.rv[i - 2];
+				pred->ob.oc[i - 1] = pred->ob.oc[i - 2];
 			}
 			
-			pred->oht->oht.fv[0] = 0;
-			pred->oht->oht.rv[0] = 1;
-			pred->oht->oht.oc[0] = taken;
+			pred->ob.fv[0] = 0;
+			pred->ob.rv[0] = 1;
+			pred->ob.oc[0] = taken;
 		} else {
-			for (int i = 0; i < pred->oht->oht.width - 1; i++) {
-				pred->oht->oht.fv[i] = pred->oht->oht.fv[i+1];
-				pred->oht->oht.rv[i] = pred->oht->oht.rv[i+1];
-				pred->oht->oht.oc[i] = pred->oht->oht.oc[i+1];
+			for (int i = 0; i < pred->ob.width - 1; i++) {
+				pred->ob.fv[i] = pred->ob.fv[i+1];
+				pred->ob.rv[i] = pred->ob.rv[i+1];
+				pred->ob.oc[i] = pred->ob.oc[i+1];
 			}
 			
-			pred->oht->oht.fv[pred->oht->oht.width - 1] = 1;
-			pred->oht->oht.rv[pred->oht->oht.width - 1] = 0;
-			pred->oht->oht.oc[pred->oht->oht.width - 1] = taken;
+			pred->ob.fv[pred->ob.width - 1] = 1;
+			pred->ob.rv[pred->ob.width - 1] = 0;
+			pred->ob.oc[pred->ob.width - 1] = taken;
 		}
 	}
 	

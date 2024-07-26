@@ -102,7 +102,10 @@ enum bpred_class {
   BPredComb,                    /* combined predictor (McFarling) */
   BPred2Level,			/* 2-level correlating pred w/2-bit counters */
   BPredTSBP,			/* Temporal Stream Branch Predictor */
-  BPredCHBP,				/* Mississippi Branch Predictor */
+  BPredCHBP,			/* Correctness History Branch Predictor (improved TSBP) */
+  BPredOB,			/* 2-Lev + OB */
+  BPredOHT,			/* 2-Lev + OHT  */
+  BPredMBP,			/* Mississippi Branch Predictor (2-lev + OB + OHT)  */
   BPred2bit,			/* 2-bit saturating cntr pred (dir mapped) */
   BPredTaken,			/* static predict taken */
   BPredNotTaken,		/* static predict not taken */
