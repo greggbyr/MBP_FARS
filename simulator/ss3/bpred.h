@@ -348,10 +348,10 @@ bpred_oht_create (
   unsigned int oht_size);			/* OHT size */
   
 /* create a future history buffer (FHB) */
-void bpred_fhb_create (bpred_t *pred, int size);
+void bpred_fhb_create (struct bpred_t *pred, int size);
 
 /* Create an outcome buffer (OB) */
-void bpred_ob_create (bpred_t *pred, int width);
+void bpred_ob_create (struct bpred_t *pred, int width);
 	
 /* print branch predictor configuration */
 void

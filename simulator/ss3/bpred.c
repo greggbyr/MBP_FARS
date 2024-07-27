@@ -1963,7 +1963,7 @@ bpred_update(struct bpred_t *pred,	/* branch predictor instance */
 		int ts_outcome;
 		//unsigned int key;  /*added typedef in tsbp.h file*/
       	
-		key = key & (pred->fwd_dirpred.tsbp->ts.head_table_size - 1); // mask key based on predictor table size
+		fwd_key = fwd_key & (pred->fwd_dirpred.tsbp->ts.head_table_size - 1); // mask key based on predictor table size
 		
 		/*Set the base outcome; Also if in replay mode and ts_outcome is incorrect, turn off replay mode*/
 		if (pred->fwd_dirpred.tsbp->ts.replay) {
@@ -2019,7 +2019,7 @@ bpred_update(struct bpred_t *pred,	/* branch predictor instance */
 		int base_outcome;
 		int chbp_outcome;
 		
-		key = key & (pred->fwd_dirpred.chbp->chbp.cht_size - 1); // mask key based on predictor table size
+		fwd_key = fwd_key & (pred->fwd_dirpred.chbp->chbp.cht_size - 1); // mask key based on predictor table size
 		
 		bool_t just_disabled_replay = FALSE;
 
@@ -2108,13 +2108,15 @@ bpred_update(struct bpred_t *pred,	/* branch predictor instance */
 	if ((MD_OP_FLAGS(op) & (F_CTRL|F_UNCOND)) != (F_CTRL|F_UNCOND) && ((pred->class == BPredOHT) || (pred->class == BPredMBP))) {
 		// Update only one OHT depending on the flow and only if fhb addr is set
 		if (fhb_addr) {
-			key = key_from_features (pred->fwd_dirpred.twolev, fhb_addr); // Get unmasked key from GHR and PC
+			fwd_key = key_from_features (pred->fwd_dirpred.twolev, fhb_addr); // Get unmasked key from GHR and PC
+			rev_key = key_from_features (pred->rev_dirpred.twolev, fhb_addr); // Get unmasked key from GHR and PC
 			
-			key = key & (pred->fwd_dirpred.oht->oht.size - 1); // mask key based on outcome history table size
+			fwd_key = fwd_key & (pred->fwd_dirpred.oht->oht.size - 1); // mask key based on outcome history table size
+			rev_key = rev_key & (pred->rev_dirpred.oht->oht.size - 1); // mask key based on outcome history table size
 			
 			if (!flow_mode) {
-				pred->rev_dirpred.oht->oht.oc[key] = taken;
-				pred->rev_dirpred.oht->oht.valid[key] = 1;
+				pred->rev_dirpred.oht->oht.oc[fwd_key] = taken;
+				pred->rev_dirpred.oht->oht.valid[fwd_key] = 1;
 			} else {
 				pred->fwd_dirpred.oht->oht.oc[key] = taken;
 				pred->fwd_dirpred.oht->oht.valid[key] = 1;
