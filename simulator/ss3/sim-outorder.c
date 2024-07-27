@@ -614,7 +614,7 @@ void reverse_flow (void) {
 		if (!rev_prd_btarget)
 	    {
 	      /* no predicted taken target, attempt not taken target */
-	      rev_prd_btarget = rev_prd_btarget + sizeof(md_inst_t);
+	      rev_prd_btarget = fwd_baddr + sizeof(md_inst_t);
 	    }
 				   
 		bpred_update(pred,
