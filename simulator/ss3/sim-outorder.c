@@ -522,6 +522,7 @@ int get_last_stack_recover_idx (md_addr_t baddr) {
 
 struct outcome {
 	md_addr_t baddr;
+	md_addr_t btarget;
 	enum md_opcode op;
 	struct bpred_update_t *dir_update;
 };
@@ -540,7 +541,7 @@ void init_outcome (void) {
 	oh.b_outcomes = calloc(oh.MAX_HIST_CNT, sizeof(struct outcome));
 }
 
-void append_outcome (md_addr_t fwd_baddr, enum md_opcode fwd_op, struct bpred_update_t *dir_update) {
+void append_outcome (md_addr_t fwd_baddr, md_addr_t fwd_btarget, enum md_opcode fwd_op, struct bpred_update_t *dir_update) {
 	oh.length++;
 	
 	if (oh.length > oh.MAX_HIST_CNT) {
@@ -560,6 +561,7 @@ void append_outcome (md_addr_t fwd_baddr, enum md_opcode fwd_op, struct bpred_up
 	}
 	
 	oh.b_outcomes[oh.length - 1].baddr = fwd_baddr;
+	oh.b_outcomes[oh.length - 1].btarget = fwd_btarget;
 	oh.b_outcomes[oh.length - 1].op = fwd_op;
 	oh.b_outcomes[oh.length - 1].dir_update = dir_update;
 }
@@ -568,6 +570,7 @@ struct outcome get_outcome (void) {
 	struct outcome o;
 
 	o.baddr = oh.b_outcomes[oh.length - 1].baddr;
+	o.baddr = oh.b_outcomes[oh.length - 1].btarget;
 	o.op = oh.b_outcomes[oh.length - 1].op;
 	o.dir_update = oh.b_outcomes[oh.length - 1].dir_update;
 
@@ -578,14 +581,16 @@ struct outcome get_outcome (void) {
 
 /* Run reverse simulation of branch predictions */
 void reverse_flow (void) {
-	md_addr_t fwd_baddr;		/* branch address */
-	md_addr_t fwd_act_btarget;		/* actual branch target */
-	enum md_opcode fwd_op;		/* opcode of instruction */
+	md_addr_t fwd_baddr;			/* historic fwd branch address */
+	md_addr_t fwd_btarget;			/* historic branch target outcome */
+	md_addr_t fwd_act_btarget;		/* actual branch target assoc with baddr */
+	md_addr_t rev_prd_btarget;      /* rev pred branch target */
+	
+	enum md_opcode fwd_op;			/* opcode of instruction */
+	
 	struct bpred_update_t *rev_dir_update_ptr;  /* FWD pred state pointer */
 
-        md_addr_t rev_prd_btarget;              /* rev pred branch target */
-
-        int fwd_is_call;
+    int fwd_is_call;
 	int fwd_is_return;
 	int last_stack_recover_idx;
 
@@ -594,6 +599,7 @@ void reverse_flow (void) {
 		
 		fwd_baddr = o.baddr;
 		fwd_op = o.op;
+		fwd_btarget = o.btarget;
 		rev_dir_update_ptr = o.dir_update;
 		
 		fwd_act_btarget = get_btarget(fwd_baddr);
@@ -602,32 +608,29 @@ void reverse_flow (void) {
 		last_stack_recover_idx = get_last_stack_recover_idx(fwd_baddr);
 
 		rev_prd_btarget = bpred_lookup(pred,
-			   /* branch address */fwd_baddr,
-			   /* target address */fwd_act_btarget,
-			   /* opcode */fwd_op,
-			   /* call? */fwd_is_call,
-			   /* return? */fwd_is_return,
-			   /* updt */rev_dir_update_ptr,
-			   /* RSB index */&last_stack_recover_idx,
-				   /* REV mode */ 1);
+				/* branch address */fwd_baddr,
+				/* target address */fwd_act_btarget,
+				/* opcode */fwd_op,
+				/* call? */fwd_is_call,
+				/* return? */fwd_is_return,
+				/* updt */rev_dir_update_ptr,
+				/* RSB index */&last_stack_recover_idx,
+				/* REV mode */ 1);
 				   
-		if (!rev_prd_btarget)
-	    {
-	      /* no predicted taken target, attempt not taken target */
-	      rev_prd_btarget = fwd_baddr + sizeof(md_inst_t);
+		if (!rev_prd_btarget) {
+			/* no predicted taken target, attempt not taken target */
+			rev_prd_btarget = fwd_baddr + sizeof(md_inst_t);
 	    }
 				   
 		bpred_update(pred,
-		       /* branch address */fwd_baddr,
-		       /* actual target address */fwd_act_btarget,
-                       /* taken? */fwd_act_btarget != (fwd_baddr +
-                                                   sizeof(md_inst_t)),
-                       /* pred taken? */rev_prd_btarget != (fwd_baddr +
-                                                        sizeof(md_inst_t)),
-                       /* correct pred? */rev_prd_btarget == fwd_act_btarget,
-                       /* opcode */fwd_op,
-                       /* dir predictor update pointer */rev_dir_update_ptr,
-				   /* REV mode */ 1);
+				/* branch address */fwd_baddr,
+				/* target address */fwd_btarget,
+                /* taken? */fwd_btarget != (fwd_baddr + sizeof(md_inst_t)),
+                /* pred taken? */rev_prd_btarget != (fwd_baddr + sizeof(md_inst_t)),
+                /* correct pred? */rev_prd_btarget == fwd_btarget,
+                /* opcode */fwd_op,
+                /* dir predictor update pointer */rev_dir_update_ptr,
+				/* REV mode */ 1);
 	}
 }
 
@@ -2609,13 +2612,15 @@ ruu_commit(void)
                        /* dir predictor update pointer */&rs->dir_update,
 				   /* FWD mode */ 0);
 					   
-	  if (rs->next_PC != (rs->PC + sizeof(md_inst_t))) {
-		set_btarget(rs->PC, rs->next_PC);
-	  }
+		if (rs->next_PC != (rs->PC + sizeof(md_inst_t))) {
+			set_btarget(rs->PC, rs->next_PC);
+		}
 	 
-	  append_outcome(/* branch address */rs->PC,
-                       /* opcode */rs->op,
-                       /* dir predictor update pointer */&rs->dir_update);
+		append_outcome(/* branch address */rs->PC,
+			/* actual target address */rs->next_PC,
+			/* opcode */rs->op,
+            /* dir predictor update pointer */&rs->dir_update
+		);
 	}
 
       /* invalidate RUU operation instance */
@@ -2807,13 +2812,15 @@ ruu_writeback(void)
 		       /* dir predictor update pointer */&rs->dir_update,
 				   /* FWD mode */ 0);
 			   
-	  if (rs->next_PC != (rs->PC + sizeof(md_inst_t))) {
-		set_btarget(rs->PC, rs->next_PC);
-	  }
+		if (rs->next_PC != (rs->PC + sizeof(md_inst_t))) {
+			set_btarget(rs->PC, rs->next_PC);
+		}
 	  
-	  append_outcome(/* branch address */rs->PC,
-		       /* opcode */rs->op,
-                       /* dir predictor update pointer */&rs->dir_update);
+		append_outcome(/* branch address */rs->PC,
+			/* actual target address */rs->next_PC,
+		    /* opcode */rs->op,
+            /* dir predictor update pointer */&rs->dir_update
+		);
 	}
 
       /* entered writeback stage, indicate in pipe trace */
@@ -4464,13 +4471,15 @@ ruu_dispatch(void)
 			       /* predictor update ptr */&rs->dir_update,
 				   /* FWD mode */ 0);
 		  
-		  if (rs->next_PC != (rs->PC + sizeof(md_inst_t))) {
-			set_btarget(rs->PC, rs->next_PC);
-		  }
+			if (rs->next_PC != (rs->PC + sizeof(md_inst_t))) {
+				set_btarget(rs->PC, rs->next_PC);
+			}
 		  
-		  append_outcome(/* branch address */regs.regs_PC,
-			         /* opcode */op,
-                                 /* dir predictor update pointer */&rs->dir_update);
+			append_outcome(/* branch address */regs.regs_PC,
+				/* actual target address */regs.regs_NPC,
+			    /* opcode */op,
+                /* dir predictor update pointer */&rs->dir_update
+			);
 		}
 	    }
 

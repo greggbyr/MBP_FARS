@@ -104,19 +104,7 @@ bpred_create(enum bpred_class class,	/* type of predictor to create */
       bpred_dir_create(BPred2Level, l1size, l2size, shift_width, xor);
 
 	// Reversible 2-Level also needs one FHB
-	pred->fhb.size = shift_width + 1;
-	
-	if (!(pred->fhb.fv = calloc(pred->fhb.size, sizeof(int))))
-		fatal("cannot allocate FHB FV bits");
-	
-	if (!(pred->fhb.rv = calloc(pred->fhb.size, sizeof(int))))
-		fatal("cannot allocate FHB RV bits");
-	
-	if (!(pred->fhb.o = calloc(pred->fhb.size, sizeof(int))))
-		fatal("cannot allocate FHB O bits");
-	
-	if (!(pred->fhb.addr = calloc(pred->fhb.size, sizeof(md_addr_t))))
-		fatal("cannot allocate FHB ADDR bits");
+	bpred_fhb_create(pred, (shift_width + 1));
 
     /* metapredictor component */
     pred->fwd_dirpred.meta = 
@@ -137,19 +125,8 @@ bpred_create(enum bpred_class class,	/* type of predictor to create */
       bpred_dir_create(BPred2Level, l1size, l2size, shift_width, xor);
 	  
 	// Reversible 2-Level also needs one FHB
-	pred->fhb.size = shift_width + 1;
+	bpred_fhb_create(pred, (shift_width + 1));
 	
-	if (!(pred->fhb.fv = calloc(pred->fhb.size, sizeof(int))))
-		fatal("cannot allocate FHB FV bits");
-	
-	if (!(pred->fhb.rv = calloc(pred->fhb.size, sizeof(int))))
-		fatal("cannot allocate FHB RV bits");
-	
-	if (!(pred->fhb.o = calloc(pred->fhb.size, sizeof(int))))
-		fatal("cannot allocate FHB O bits");
-	
-	if (!(pred->fhb.addr = calloc(pred->fhb.size, sizeof(md_addr_t))))
-		fatal("cannot allocate FHB ADDR bits");
     break;
 	
   case BPredOB:
@@ -161,33 +138,10 @@ bpred_create(enum bpred_class class,	/* type of predictor to create */
       bpred_dir_create(BPred2Level, l1size, l2size, shift_width, xor);
 	  
 	// Reversible 2-Level also needs one FHB
-	pred->fhb.size = shift_width + 1;
-	
-	if (!(pred->fhb.fv = calloc(pred->fhb.size, sizeof(int))))
-		fatal("cannot allocate FHB FV bits");
-	
-	if (!(pred->fhb.rv = calloc(pred->fhb.size, sizeof(int))))
-		fatal("cannot allocate FHB RV bits");
-	
-	if (!(pred->fhb.o = calloc(pred->fhb.size, sizeof(int))))
-		fatal("cannot allocate FHB O bits");
-	
-	if (!(pred->fhb.addr = calloc(pred->fhb.size, sizeof(md_addr_t))))
-		fatal("cannot allocate FHB ADDR bits");
+	bpred_fhb_create(pred, (shift_width + 1));
 	
 	// Outcome Buffer (OB)
-	pred->ob.width = 16384; /* hardcoding to 16 kb for now, will make configurable later */
-	
-	//pred->ob.pointer = 0;	/* start off pointer at 0 */
-	
-	if (!(pred->ob.fv = calloc(pred->ob.width, sizeof(int))))
-		fatal("cannot allocate OB FV bits");
-	
-	if (!(pred->ob.rv = calloc(pred->ob.width, sizeof(int))))
-		fatal("cannot allocate OB RV bits");
-	
-	if (!(pred->ob.oc = calloc(pred->ob.width, sizeof(int))))
-		fatal("cannot allocate OB OC bits");
+	bpred_ob_create(pred, 16384); /* Hard setting OB width to 16k for now*/
 	
     break;
 	
@@ -200,19 +154,7 @@ bpred_create(enum bpred_class class,	/* type of predictor to create */
       bpred_dir_create(BPred2Level, l1size, l2size, shift_width, xor);
 	  
 	// Reversible 2-Level also needs one FHB
-	pred->fhb.size = shift_width + 1;
-	
-	if (!(pred->fhb.fv = calloc(pred->fhb.size, sizeof(int))))
-		fatal("cannot allocate FHB FV bits");
-	
-	if (!(pred->fhb.rv = calloc(pred->fhb.size, sizeof(int))))
-		fatal("cannot allocate FHB RV bits");
-	
-	if (!(pred->fhb.o = calloc(pred->fhb.size, sizeof(int))))
-		fatal("cannot allocate FHB O bits");
-	
-	if (!(pred->fhb.addr = calloc(pred->fhb.size, sizeof(md_addr_t))))
-		fatal("cannot allocate FHB ADDR bits");
+	bpred_fhb_create(pred, (shift_width + 1));
 	
 	//Need FWD and REV OHTs
 	pred->fwd_dirpred.oht = 
@@ -232,19 +174,7 @@ bpred_create(enum bpred_class class,	/* type of predictor to create */
       bpred_dir_create(BPred2Level, l1size, l2size, shift_width, xor);
 	  
 	// Reversible 2-Level also needs one FHB
-	pred->fhb.size = shift_width + 1;
-	
-	if (!(pred->fhb.fv = calloc(pred->fhb.size, sizeof(int))))
-		fatal("cannot allocate FHB FV bits");
-	
-	if (!(pred->fhb.rv = calloc(pred->fhb.size, sizeof(int))))
-		fatal("cannot allocate FHB RV bits");
-	
-	if (!(pred->fhb.o = calloc(pred->fhb.size, sizeof(int))))
-		fatal("cannot allocate FHB O bits");
-	
-	if (!(pred->fhb.addr = calloc(pred->fhb.size, sizeof(md_addr_t))))
-		fatal("cannot allocate FHB ADDR bits");
+	bpred_fhb_create(pred, (shift_width + 1));
 	
 	//Need FWD and REV OHTs
 	pred->fwd_dirpred.oht = 
@@ -252,21 +182,9 @@ bpred_create(enum bpred_class class,	/* type of predictor to create */
 	  
 	pred->rev_dirpred.oht = 
       bpred_oht_create(class, l2size);
-	  
 	
 	// Outcome Buffer (OB)
-	pred->ob.width = 16384; /* hardcoding to 16 kb for now, will make configurable later */
-	
-	//pred->ob.pointer = 0;	/* start off pointer at 0 */
-	
-	if (!(pred->ob.fv = calloc(pred->ob.width, sizeof(int))))
-		fatal("cannot allocate OB FV bits");
-	
-	if (!(pred->ob.rv = calloc(pred->ob.width, sizeof(int))))
-		fatal("cannot allocate OB RV bits");
-	
-	if (!(pred->ob.oc = calloc(pred->ob.width, sizeof(int))))
-		fatal("cannot allocate OB OC bits");
+	bpred_ob_create(pred, 16384); /* Hard setting OB width to 16k for now*/
 	
     break;
 
@@ -364,6 +282,46 @@ bpred_create(enum bpred_class class,	/* type of predictor to create */
   }
 
   return pred;
+}
+
+/* Create an instance of the Outcome Buffer (OB) */
+void bpred_ob_create (bpred_t *pred, int width) {
+	// Outcome Buffer (OB)
+	pred->ob.width = width; /* hardcoding to 16 kb for now, will make configurable later */
+	
+	pred->ob.end = width - 1;	/* End of buffer window at width - 1 */
+	
+	pred->ob.beg = 0;	/* Beginning of buffer window at 0 */
+	
+	if (!(pred->ob.fv = calloc(width, sizeof(int))))
+		fatal("cannot allocate OB FV bits");
+	
+	if (!(pred->ob.rv = calloc(width, sizeof(int))))
+		fatal("cannot allocate OB RV bits");
+	
+	if (!(pred->ob.oc = calloc(width, sizeof(int))))
+		fatal("cannot allocate OB OC bits");
+}
+
+/* Create an instance of the Future History Buffer (FHB) */
+void bpred_fhb_create (bpred_t *pred, int size) {
+	pred->fhb.size = size;
+	
+	pred->fhb.top = size - 1;
+	
+	pred->fhb.bot = 0;
+	
+	if (!(pred->fhb.fv = calloc(size, sizeof(int))))
+		fatal("cannot allocate FHB FV bits");
+	
+	if (!(pred->fhb.rv = calloc(size, sizeof(int))))
+		fatal("cannot allocate FHB RV bits");
+	
+	if (!(pred->fhb.o = calloc(size, sizeof(int))))
+		fatal("cannot allocate FHB O bits");
+	
+	if (!(pred->fhb.addr = calloc(size, sizeof(md_addr_t))))
+		fatal("cannot allocate FHB ADDR bits");
 }
 
 /* create a branch direction predictor */
@@ -1152,106 +1110,82 @@ bpred_lookup(struct bpred_t *pred,	/* branch predictor instance */
 	     int *stack_recover_idx,	/* Non-speculative top-of-stack; used on mispredict recovery */
 		 int flow_mode)  /* Flow mode (0=FWD; 1=REV) */
 {
-  struct bpred_btb_ent_t *pbtb = NULL;
-  int index, i;
-  bool_t invert = FALSE;
-  
-  int valid_outcome = NULL;
+	struct bpred_btb_ent_t *pbtb = NULL;
+	int index, i;
+	bool_t invert = FALSE;
+	  
+	int fwd_valid_outcome = NULL;
+	int rev_valid_outcome = NULL;
 
-  if (!dir_update_ptr)
-    panic("no bpred update record");
+	if (!dir_update_ptr)
+		panic("no bpred update record");
 
-  /* if this is not a branch, return not-taken */
-  if (!(MD_OP_FLAGS(op) & F_CTRL))
-    return 0;
+	/* if this is not a branch, return not-taken */
+	if (!(MD_OP_FLAGS(op) & F_CTRL))
+		return 0;
+   
+   // REV addresses; 
+   // These are supposed to be opposites of the FWD but 
+   // without ISA updates and knowledge of addrs and targets, 
+   // these need to be the same.
+   md_addr_t rbaddr = baddr;		/* REV Branch ADDR; for now, setting to baddr */
+   md_addr_t rbtarget = btarget;	/* REV Branch Target; for now, setting to btarget */
+   
 
-  /* Get a pointer into the BTB early as we may need target and it's already set after FWD mode */
-  index = (baddr >> MD_BR_SHIFT) & (pred->btb.sets - 1);
-
-  if (pred->btb.assoc > 1)
-	{
-	  index *= pred->btb.assoc;
-
-	  /* Now we know the set; look for a PC match */
-	  for (i = index; i < (index+pred->btb.assoc) ; i++)
-	if (pred->btb.btb_data[i].addr == baddr)
-	  {
-		/* match */
-		pbtb = &pred->btb.btb_data[i];
-		break;
-	  }
-	}	
-  else
-	{
-	  pbtb = &pred->btb.btb_data[index];
-	  if (pbtb->addr != baddr)
-	pbtb = NULL;
+	if (!flow_mode) {
+		pred->lookups++;
+	} else {
+		pred->reverse_lookups++;
 	}
 
-  /*
-   * We now also have a pointer into the BTB for a hit, or NULL otherwise
-   */
-   
-   md_addr_t rbaddr, rbtarget;
-   
-   rbtarget = baddr;
-   
-   if (pbtb == NULL) {
-	   if ((btarget != 0) && (btarget != (baddr + sizeof(md_inst_t)))) {
-		   rbaddr = btarget;
-	   } else { /* btarget was never set anywhere, resorting to checking FWD predictor just to simulate for now */
-		   rbaddr = NULL;
-	   }
-   } else {
-	   rbaddr = pbtb->target;
-   }
-
-  if (!flow_mode) {
-	pred->lookups++;
-  } else {
-	pred->reverse_lookups++;
-  }
-
+	// FWD DIR Pointers
 	dir_update_ptr->fwd_dir.ras = FALSE;
-	  dir_update_ptr->fwd_pdir1 = NULL;
-	  dir_update_ptr->fwd_pdir2 = NULL;
-	  dir_update_ptr->fwd_pmeta = NULL;
-	  /* Except for jumps, get a pointer to direction-prediction bits */
-	  switch (pred->class) {
+	dir_update_ptr->fwd_pdir1 = NULL;
+	dir_update_ptr->fwd_pdir2 = NULL;
+	dir_update_ptr->fwd_pmeta = NULL;
+	
+	// REV DIR Pointers
+	dir_update_ptr->rev_dir.ras = FALSE;
+	dir_update_ptr->rev_pdir1 = NULL;
+	dir_update_ptr->rev_pdir2 = NULL;
+	dir_update_ptr->rev_pmeta = NULL;
+	
+	/* Except for jumps, get a pointer to direction-prediction bits */
+	switch (pred->class) {
 		case BPredComb:
-		  if ((MD_OP_FLAGS(op) & (F_CTRL|F_UNCOND)) != (F_CTRL|F_UNCOND))
-		{
-		  char *bimod, *twolev, *meta;
-		  bimod = bpred_dir_lookup (pred->fwd_dirpred.bimod, baddr);
-		  twolev = bpred_dir_lookup (pred->fwd_dirpred.twolev, baddr);
-		  meta = bpred_dir_lookup (pred->fwd_dirpred.meta, baddr);
-		  dir_update_ptr->fwd_pmeta = meta;
-		  dir_update_ptr->fwd_dir.meta  = (*meta >= 2);
-		  dir_update_ptr->fwd_dir.bimod = (*bimod >= 2);
-		  dir_update_ptr->fwd_dir.twolev  = (*twolev >= 2);
-		  if (*meta >= 2)
-			{
-			  dir_update_ptr->fwd_pdir1 = twolev;
-			  dir_update_ptr->fwd_pdir2 = bimod;
+			if ((MD_OP_FLAGS(op) & (F_CTRL|F_UNCOND)) != (F_CTRL|F_UNCOND)) {
+				char *bimod, *twolev, *meta;
+			  
+				bimod = bpred_dir_lookup (pred->fwd_dirpred.bimod, baddr);
+				twolev = bpred_dir_lookup (pred->fwd_dirpred.twolev, baddr);
+				meta = bpred_dir_lookup (pred->fwd_dirpred.meta, baddr);
+				  
+				dir_update_ptr->fwd_pmeta = meta;
+				dir_update_ptr->fwd_dir.meta  = (*meta >= 2);
+				dir_update_ptr->fwd_dir.bimod = (*bimod >= 2);
+				dir_update_ptr->fwd_dir.twolev  = (*twolev >= 2);
+				  
+				if (*meta >= 2) {
+					dir_update_ptr->fwd_pdir1 = twolev;
+					dir_update_ptr->fwd_pdir2 = bimod;
+				} else {
+					dir_update_ptr->fwd_pdir1 = bimod;
+					dir_update_ptr->fwd_pdir2 = twolev;
+				}
 			}
-		  else
-			{
-			  dir_update_ptr->fwd_pdir1 = bimod;
-			  dir_update_ptr->fwd_pdir2 = twolev;
-			}
-		}
-		  break;
+			break;
+			
 		case BPred2Level:
 			if ((MD_OP_FLAGS(op) & (F_CTRL|F_UNCOND)) != (F_CTRL|F_UNCOND)) {
 				//Check if FHB has valid past outcome results
-				if (pred->fhb.fv[pred->fhb.size - 1]) {
-					valid_outcome = pred->fhb.o[pred->fhb.size - 1];
+				if (pred->fhb.fv[pred->fhb.top]) {
+					fwd_valid_outcome = pred->fhb.o[pred->fhb.top];
 				}
 					
 				dir_update_ptr->fwd_pdir1 = bpred_dir_lookup (pred->fwd_dirpred.twolev, baddr);
 			}
 			break;
-	/**************************added TSBP case*********************************************/
+			
 		case BPredTSBP:   
 			if ((MD_OP_FLAGS(op) & (F_CTRL|F_UNCOND)) != (F_CTRL|F_UNCOND)) {
 				dir_update_ptr->fwd_pdir1 = bpred_dir_lookup (pred->fwd_dirpred.twolev, baddr);  //get 2level base outcome prediction
@@ -1275,7 +1209,7 @@ bpred_lookup(struct bpred_t *pred,	/* branch predictor instance */
 				}
 			}
 			break;
-	/**************************added CHBP case*********************************************/
+			
 		case BPredCHBP:   
 			if ((MD_OP_FLAGS(op) & (F_CTRL|F_UNCOND)) != (F_CTRL|F_UNCOND)) {
 				dir_update_ptr->fwd_pdir1 = bpred_dir_lookup (pred->fwd_dirpred.twolev, baddr);  //get 2level base outcome prediction
@@ -1293,30 +1227,32 @@ bpred_lookup(struct bpred_t *pred,	/* branch predictor instance */
 				}
 			}
 			break;
+			
 		case BPredOB:
 			if ((MD_OP_FLAGS(op) & (F_CTRL|F_UNCOND)) != (F_CTRL|F_UNCOND)) {
 				//Check if OB or FHB have valid past outcome results
-				if (pred->ob.fv[pred->ob.width - 1]) {
-					valid_outcome = pred->ob.oc[pred->ob.width - 1];
-				} else if (pred->fhb.fv[pred->fhb.size - 1]) {
-					valid_outcome = pred->fhb.o[pred->fhb.size - 1];
+				if (pred->ob.fv[pred->ob.end]) {
+					fwd_valid_outcome = pred->ob.oc[pred->ob.end];
+				} else if (pred->fhb.fv[pred->fhb.top]) {
+					fwd_valid_outcome = pred->fhb.o[pred->fhb.top];
 				}
 					
 				dir_update_ptr->fwd_pdir1 = bpred_dir_lookup (pred->fwd_dirpred.twolev, baddr);
 			}
 			break;
+			
 		case BPredOHT:
 			if ((MD_OP_FLAGS(op) & (F_CTRL|F_UNCOND)) != (F_CTRL|F_UNCOND)) {
 				//Check if FHB or OHT have valid past outcome results
-				if (pred->fhb.fv[pred->fhb.size - 1]) {
-					valid_outcome = pred->fhb.o[pred->fhb.size - 1];
+				if (pred->fhb.fv[pred->fhb.top]) {
+					fwd_valid_outcome = pred->fhb.o[pred->fhb.top];
 				} else {
 					int key = key_from_features (pred->fwd_dirpred.twolev, baddr); // Get unmasked key from GHR and PC
 				
 					key = key & (pred->fwd_dirpred.oht->oht.size - 1); // mask key based on predictor table size
 					
 					if (pred->fwd_dirpred.oht->oht.valid[key]) {
-						valid_outcome = pred->fwd_dirpred.oht->oht.oc[key];
+						fwd_valid_outcome = pred->fwd_dirpred.oht->oht.oc[key];
 						
 						// Only valid once in the OHT when in FWD mode
 						if (!flow_mode) {
@@ -1328,18 +1264,19 @@ bpred_lookup(struct bpred_t *pred,	/* branch predictor instance */
 				dir_update_ptr->fwd_pdir1 = bpred_dir_lookup (pred->fwd_dirpred.twolev, baddr);
 			}
 			break;
+			
 		case BPredMBP:
 			if ((MD_OP_FLAGS(op) & (F_CTRL|F_UNCOND)) != (F_CTRL|F_UNCOND)) {
 				//Check if OB or OHT have valid past outcome results
-				if (pred->ob.fv[pred->ob.width - 1]) {
-					valid_outcome = pred->ob.oc[pred->ob.width - 1];
+				if (pred->ob.fv[pred->ob.end]) {
+					fwd_valid_outcome = pred->ob.oc[pred->ob.end];
 				} else {
 					int key = key_from_features (pred->fwd_dirpred.twolev, baddr); // Get unmasked key from GHR and PC
 				
 					key = key & (pred->fwd_dirpred.oht->oht.size - 1); // mask key based on predictor table size
 					
 					if (pred->fwd_dirpred.oht->oht.valid[key]) {
-						valid_outcome = pred->fwd_dirpred.oht->oht.oc[key];
+						fwd_valid_outcome = pred->fwd_dirpred.oht->oht.oc[key];
 						
 						// Only valid once in the OHT when in FWD mode
 						if (!flow_mode) {
@@ -1351,88 +1288,66 @@ bpred_lookup(struct bpred_t *pred,	/* branch predictor instance */
 				dir_update_ptr->fwd_pdir1 = bpred_dir_lookup (pred->fwd_dirpred.twolev, baddr);
 			}
 			break;
+			
 		case BPred2bit:
-		  if ((MD_OP_FLAGS(op) & (F_CTRL|F_UNCOND)) != (F_CTRL|F_UNCOND))
-		{
-		  dir_update_ptr->fwd_pdir1 =
-			bpred_dir_lookup (pred->fwd_dirpred.bimod, baddr);
-		}
-		  break;
+			if ((MD_OP_FLAGS(op) & (F_CTRL|F_UNCOND)) != (F_CTRL|F_UNCOND)) {
+				dir_update_ptr->fwd_pdir1 =
+				bpred_dir_lookup (pred->fwd_dirpred.bimod, baddr);
+			}
+			break;
+			
 		case BPredTaken:
-		  return btarget;
+			return btarget;
+			
 		case BPredNotTaken:
-		  if ((MD_OP_FLAGS(op) & (F_CTRL|F_UNCOND)) != (F_CTRL|F_UNCOND))
-		{
-		  return baddr + sizeof(md_inst_t);
-		}
-		  else
-		{
-		  return btarget;
-		}
+			if ((MD_OP_FLAGS(op) & (F_CTRL|F_UNCOND)) != (F_CTRL|F_UNCOND)) {
+				return baddr + sizeof(md_inst_t);
+			} else {
+				return btarget;
+			}
+			
 		default:
-		  panic("bogus predictor class");
-	  }
+			panic("bogus predictor class");
+	}
+	
+	// REV Predictors
 	  
-	  // There were forward valid outcomes
-	  if (!flow_mode && valid_outcome != NULL) {
-		if (pbtb == NULL) {
-		  /* BTB miss -- just return a predicted direction */
-			return (valid_outcome
-				  ? /* taken */ 1
-				  : /* not taken */ 0);
-		} else {
-		  /* BTB hit, so return target if it's a predicted-taken branch */
-			return (valid_outcome
-				  ? /* taken */ pbtb->target
-				  : /* not taken */ 0);
-		}
-	  } else {
-		valid_outcome = NULL; 
-	  }
-  	
-	  dir_update_ptr->rev_dir.ras = FALSE;
-	  dir_update_ptr->rev_pdir1 = NULL;
-	  dir_update_ptr->rev_pdir2 = NULL;
-	  dir_update_ptr->rev_pmeta = NULL;
-	  
-	// only if rbaddr is available 
-	if (rbaddr) {
-	  /* Except for jumps, get a pointer to direction-prediction bits */
-	  switch (pred->class) {
+	/* Except for jumps, get a pointer to direction-prediction bits */
+	switch (pred->class) {
 		case BPredComb:
-		  if ((MD_OP_FLAGS(op) & (F_CTRL|F_UNCOND)) != (F_CTRL|F_UNCOND))
-		{
-		  char *bimod, *twolev, *meta;
-		  bimod = bpred_dir_lookup (pred->rev_dirpred.bimod, baddr);
-		  twolev = bpred_dir_lookup (pred->rev_dirpred.twolev, baddr);
-		  meta = bpred_dir_lookup (pred->rev_dirpred.meta, baddr);
-		  dir_update_ptr->rev_pmeta = meta;
-		  dir_update_ptr->rev_dir.meta  = (*meta >= 2);
-		  dir_update_ptr->rev_dir.bimod = (*bimod >= 2);
-		  dir_update_ptr->rev_dir.twolev  = (*twolev >= 2);
-		  if (*meta >= 2)
-			{
-			  dir_update_ptr->rev_pdir1 = twolev;
-			  dir_update_ptr->rev_pdir2 = bimod;
+			if ((MD_OP_FLAGS(op) & (F_CTRL|F_UNCOND)) != (F_CTRL|F_UNCOND)) {
+				char *bimod, *twolev, *meta;
+				
+				bimod = bpred_dir_lookup (pred->rev_dirpred.bimod, baddr);
+				twolev = bpred_dir_lookup (pred->rev_dirpred.twolev, baddr);
+				meta = bpred_dir_lookup (pred->rev_dirpred.meta, baddr);
+				
+				dir_update_ptr->rev_pmeta = meta;
+				dir_update_ptr->rev_dir.meta  = (*meta >= 2);
+				dir_update_ptr->rev_dir.bimod = (*bimod >= 2);
+				dir_update_ptr->rev_dir.twolev  = (*twolev >= 2);
+				
+				if (*meta >= 2) {
+					dir_update_ptr->rev_pdir1 = twolev;
+					dir_update_ptr->rev_pdir2 = bimod;
+				} else {
+					dir_update_ptr->rev_pdir1 = bimod;
+					dir_update_ptr->rev_pdir2 = twolev;
+				}
 			}
-		  else
-			{
-			  dir_update_ptr->rev_pdir1 = bimod;
-			  dir_update_ptr->rev_pdir2 = twolev;
-			}
-		}
-		  break;
+			break;
+			
 		case BPred2Level:
 			if ((MD_OP_FLAGS(op) & (F_CTRL|F_UNCOND)) != (F_CTRL|F_UNCOND)) {
 				//Check if FHB has valid past outcome results
-				if (pred->fhb.rv[pred->fhb.size - 1]) {
-					valid_outcome = pred->fhb.o[pred->fhb.size - 1];
+				if (pred->fhb.rv[pred->fhb.bot]) {
+					rev_valid_outcome = pred->fhb.o[pred->fhb.bot];
 				}
 					
 				dir_update_ptr->rev_pdir1 = bpred_dir_lookup (pred->rev_dirpred.twolev, baddr);
 			}
 			break;
-	/**************************added TSBP case*********************************************/
+			
 		case BPredTSBP:   
 			if ((MD_OP_FLAGS(op) & (F_CTRL|F_UNCOND)) != (F_CTRL|F_UNCOND)) {
 				dir_update_ptr->rev_pdir1 = bpred_dir_lookup (pred->rev_dirpred.twolev, baddr);  //get 2level base outcome prediction
@@ -1456,7 +1371,7 @@ bpred_lookup(struct bpred_t *pred,	/* branch predictor instance */
 				}
 			}
 			break;
-	/**************************added CHBP case*********************************************/
+			
 		case BPredCHBP:   
 			if ((MD_OP_FLAGS(op) & (F_CTRL|F_UNCOND)) != (F_CTRL|F_UNCOND)) {
 				dir_update_ptr->rev_pdir1 = bpred_dir_lookup (pred->rev_dirpred.twolev, baddr);  //get 2level base outcome prediction
@@ -1474,30 +1389,32 @@ bpred_lookup(struct bpred_t *pred,	/* branch predictor instance */
 				}
 			}
 			break;
+			
 		case BPredOB:
 			if ((MD_OP_FLAGS(op) & (F_CTRL|F_UNCOND)) != (F_CTRL|F_UNCOND)) {
 				//Check if OB or FHB have valid past outcome results
-				if (pred->ob.rv[pred->ob.width - 1]) {
-					valid_outcome = pred->ob.oc[pred->ob.width - 1];
-				} else if (pred->fhb.rv[pred->fhb.size - 1]) {
-					valid_outcome = pred->fhb.o[pred->fhb.size - 1];
+				if (pred->ob.rv[pred->ob.beg]) {
+					rev_valid_outcome = pred->ob.oc[pred->ob.beg];
+				} else if (pred->fhb.rv[pred->fhb.bot]) {
+					rev_valid_outcome = pred->fhb.o[pred->fhb.bot];
 				}
 					
 				dir_update_ptr->rev_pdir1 = bpred_dir_lookup (pred->rev_dirpred.twolev, baddr);
 			}
 			break;
+			
 		case BPredOHT:
 			if ((MD_OP_FLAGS(op) & (F_CTRL|F_UNCOND)) != (F_CTRL|F_UNCOND)) {
 				//Check if FHB or OHT have valid past outcome results
-				if (pred->fhb.rv[pred->fhb.size - 1]) {
-					valid_outcome = pred->fhb.o[pred->fhb.size - 1];
+				if (pred->fhb.rv[pred->fhb.bot]) {
+					rev_valid_outcome = pred->fhb.o[pred->fhb.bot];
 				} else {
 					int key = key_from_features (pred->rev_dirpred.twolev, baddr); // Get unmasked key from GHR and PC
 				
 					key = key & (pred->rev_dirpred.oht->oht.size - 1); // mask key based on predictor table size
 					
 					if (pred->rev_dirpred.oht->oht.valid[key]) {
-						valid_outcome = pred->rev_dirpred.oht->oht.oc[key];
+						rev_valid_outcome = pred->rev_dirpred.oht->oht.oc[key];
 						
 						// Only valid once in the OHT when in REV mode
 						if (flow_mode) {
@@ -1509,18 +1426,19 @@ bpred_lookup(struct bpred_t *pred,	/* branch predictor instance */
 				dir_update_ptr->rev_pdir1 = bpred_dir_lookup (pred->rev_dirpred.twolev, baddr);
 			}
 			break;
+			
 		case BPredMBP:
 			if ((MD_OP_FLAGS(op) & (F_CTRL|F_UNCOND)) != (F_CTRL|F_UNCOND)) {
 				//Check if OB or OHT have valid past outcome results
-				if (pred->ob.rv[pred->ob.width - 1]) {
-					valid_outcome = pred->ob.oc[pred->ob.width - 1];
+				if (pred->ob.rv[pred->ob.beg]) {
+					rev_valid_outcome = pred->ob.oc[pred->ob.beg];
 				} else {
 					int key = key_from_features (pred->rev_dirpred.twolev, baddr); // Get unmasked key from GHR and PC
 				
 					key = key & (pred->rev_dirpred.oht->oht.size - 1); // mask key based on predictor table size
 					
 					if (pred->rev_dirpred.oht->oht.valid[key]) {
-						valid_outcome = pred->rev_dirpred.oht->oht.oc[key];
+						rev_valid_outcome = pred->rev_dirpred.oht->oht.oc[key];
 						
 						// Only valid once in the OHT when in REV mode
 						if (flow_mode) {
@@ -1532,195 +1450,169 @@ bpred_lookup(struct bpred_t *pred,	/* branch predictor instance */
 				dir_update_ptr->rev_pdir1 = bpred_dir_lookup (pred->rev_dirpred.twolev, baddr);
 			}
 			break;
+			
 		case BPred2bit:
-		  if ((MD_OP_FLAGS(op) & (F_CTRL|F_UNCOND)) != (F_CTRL|F_UNCOND))
-		{
-		  dir_update_ptr->rev_pdir1 =
-			bpred_dir_lookup (pred->rev_dirpred.bimod, baddr);
-		}
-		  break;
+			if ((MD_OP_FLAGS(op) & (F_CTRL|F_UNCOND)) != (F_CTRL|F_UNCOND)) {
+				dir_update_ptr->rev_pdir1 =
+				bpred_dir_lookup (pred->rev_dirpred.bimod, baddr);
+			}
+			break;
+			
 		case BPredTaken:
-		  return btarget;
+			return btarget;
+			
 		case BPredNotTaken:
-		  if ((MD_OP_FLAGS(op) & (F_CTRL|F_UNCOND)) != (F_CTRL|F_UNCOND))
-		{
-		  return baddr + sizeof(md_inst_t);
-		}
-		  else
-		{
-		  return btarget;
-		}
+			if ((MD_OP_FLAGS(op) & (F_CTRL|F_UNCOND)) != (F_CTRL|F_UNCOND)) {
+				return baddr + sizeof(md_inst_t);
+			} else {
+				return btarget;
+			}
+			
 		default:
-		  panic("bogus predictor class");
-	  }
+			panic("bogus predictor class");
 	}
 	
-	// There were reverse valid outcomes
-	  if (flow_mode && valid_outcome != NULL) {
-		if (pbtb == NULL) {
-		  /* BTB miss -- just return a predicted direction */
-			return (valid_outcome
-				  ? /* taken */ 1
-				  : /* not taken */ 0);
-		} else {
-		  /* BTB hit, so return target if it's a predicted-taken branch */
-			return (valid_outcome
-				  ? /* taken */ pbtb->target
-				  : /* not taken */ 0);
+	
+   /*
+	* We have a stateful predictor, and have gotten a pointer into the
+	* direction predictor (except for jumps, for which the ptr is null)
+	*
+	* record pre-pop TOS; if this branch is executed speculatively
+	* and is squashed, we'll restore the TOS and hope the data
+	* wasn't corrupted in the meantime.
+	*
+	* For REV mode, return requires push and call requires pop 
+	*
+	*/
+	
+	if (!flow_mode) {
+		if (pred->retstack.size)
+			*stack_recover_idx = pred->retstack.tos;
+		else
+			*stack_recover_idx = 0;
+
+		/* if this is a return, pop return-address stack */
+		if (is_return && pred->retstack.size) {
+			md_addr_t target = pred->retstack.stack[pred->retstack.tos].target;
+			
+			pred->retstack.tos = (pred->retstack.tos + pred->retstack.size - 1) % pred->retstack.size;
+			pred->retstack_pops++;
+			
+			dir_update_ptr->fwd_dir.ras = TRUE; /* using RAS here */
+			
+			return target;
 		}
-	  } else {
-		valid_outcome = NULL; 
-	  }
-	
-if (!flow_mode) {
-  /*
-   * We have a stateful predictor, and have gotten a pointer into the
-   * direction predictor (except for jumps, for which the ptr is null)
-   */
-
-  /* record pre-pop TOS; if this branch is executed speculatively
-   * and is squashed, we'll restore the TOS and hope the data
-   * wasn't corrupted in the meantime. */
-  if (pred->retstack.size)
-	*stack_recover_idx = pred->retstack.tos;
-  else
-	*stack_recover_idx = 0;
-
-  /* if this is a return, pop return-address stack */
-  if (is_return && pred->retstack.size)
-	{
-	  md_addr_t target = pred->retstack.stack[pred->retstack.tos].target;
-	  pred->retstack.tos = (pred->retstack.tos + pred->retstack.size - 1)
-					   % pred->retstack.size;
-	  pred->retstack_pops++;
-	  dir_update_ptr->fwd_dir.ras = TRUE; /* using RAS here */
-	  return target;
-	}
 
 #ifndef RAS_BUG_COMPATIBLE
-  /* if function call, push return-address onto return-address stack */
-  if (is_call && pred->retstack.size)
-	{
-	  pred->retstack.tos = (pred->retstack.tos + 1)% pred->retstack.size;
-	  pred->retstack.stack[pred->retstack.tos].target = 
-	baddr + sizeof(md_inst_t);
-	  pred->retstack_pushes++;
-	}
+		/* if function call, push return-address onto return-address stack */
+		if (is_call && pred->retstack.size) {
+			pred->retstack.tos = (pred->retstack.tos + 1)% pred->retstack.size;
+			pred->retstack.stack[pred->retstack.tos].target = baddr + sizeof(md_inst_t);
+			pred->retstack_pushes++;
+		}
 #endif /* !RAS_BUG_COMPATIBLE */
-} else {
-  /*
-   * We have a stateful predictor, and have gotten a pointer into the
-   * direction predictor (except for jumps, for which the ptr is null)
-   */
+	} else {
+		if (pred->retstack.size)
+			*stack_recover_idx = pred->retstack.tos;
+		else
+			*stack_recover_idx = 0;
 
-  /* record pre-pop TOS; if this branch is executed speculatively
-   * and is squashed, we'll restore the TOS and hope the data
-   * wasn't corrupted in the meantime. */
-  if (pred->retstack.size)
-	*stack_recover_idx = pred->retstack.tos;
-  else
-	*stack_recover_idx = 0;
-
-	/* Since this is reversed, return constitutes a push and call a pop  */
-
-  /* if this is a return, pop return-address stack */
-  if (is_return && pred->retstack.size)
-	{
-	  md_addr_t target = pred->retstack.stack[pred->retstack.tos].target;
-	  pred->retstack.tos = (pred->retstack.tos + pred->retstack.size - 1) % pred->retstack.size;
-	  pred->reverse_retstack_pushes++;
-	  return target;
-	}
-
+		/* Since this is reversed, return constitutes a push and call a pop  */
+		if (is_return && pred->retstack.size) {
 #ifndef RAS_BUG_COMPATIBLE
-  /* if function call, push return-address onto return-address stack */
-  if (is_call && pred->retstack.size)
-	{
-	  pred->retstack.tos = (pred->retstack.tos + 1)% pred->retstack.size;
-	  pred->retstack.stack[pred->retstack.tos].target = 
-	baddr + sizeof(md_inst_t);
-	  pred->reverse_retstack_pops++;
-	  dir_update_ptr->rev_dir.ras = TRUE; /* using RAS here */
-	}
+			/* if this is a return, push btarget onto return-address stack */
+			pred->retstack.tos = (pred->retstack.tos + 1)% pred->retstack.size;
+			pred->retstack.stack[pred->retstack.tos].target = btarget;
+			
+			pred->reverse_retstack_pushes++;
 #endif /* !RAS_BUG_COMPATIBLE */
-}
-  
-  /* Where BB code was originally */
-
-  /* if this is a jump, ignore predicted direction; we know it's taken. */
-  if ((MD_OP_FLAGS(op) & (F_CTRL|F_UNCOND)) == (F_CTRL|F_UNCOND))
-	{
-	  return (pbtb ? pbtb->target : 1);
-	}
+			return btarget;
+		}
 		
-  /* otherwise we have a conditional branch */
-  if (!flow_mode || dir_update_ptr->rev_pdir1 == NULL) {
-	  if (pbtb == NULL)
-		{
-		  /* BTB miss -- just return a predicted direction */
-		  if (invert) /* TS inverts result */
-		  {
-			return ((*(dir_update_ptr->fwd_pdir1) >= 2)
-			  ? /* taken */ 0
-			  : /* not taken */ 1);
-		  }
-		  else 
-		  {
-			return ((*(dir_update_ptr->fwd_pdir1) >= 2)
-				  ? /* taken */ 1
-				  : /* not taken */ 0);
-		  }
+		/* if function call, pop return-address stack */
+		if (is_call && pred->retstack.size) {
+			// Don't need target for this as there is no reversible ISA yet implemented
+			//md_addr_t target = pred->retstack.stack[pred->retstack.tos].target;
+			
+			pred->retstack.tos = (pred->retstack.tos + pred->retstack.size - 1) % pred->retstack.size;
+			pred->reverse_retstack_pops++;
+			
+			dir_update_ptr->rev_dir.ras = TRUE; /* using RAS here */
+			
+			//return target;
 		}
-	  else
-		{
-		  /* BTB hit, so return target if it's a predicted-taken branch */
-		  if (invert) /* TS inverts result */
-		  {
-			return ((*(dir_update_ptr->fwd_pdir1) >= 2)
-			  ? /* taken */ 0
-			  : /* not taken */ pbtb->target);
-		  }
-		  else
-		  {
-			return ((*(dir_update_ptr->fwd_pdir1) >= 2)
-				  ? /* taken */ pbtb->target
-				  : /* not taken */ 0);
-		  }
+	}
+  
+	/* Get a pointer into the BTB early as we may need target and it's already set after FWD mode */
+	index = (baddr >> MD_BR_SHIFT) & (pred->btb.sets - 1);
+
+	if (pred->btb.assoc > 1) {
+		index *= pred->btb.assoc;
+
+		/* Now we know the set; look for a PC match */
+		for (i = index; i < (index+pred->btb.assoc) ; i++)
+			if (pred->btb.btb_data[i].addr == baddr) {
+				/* match */
+				pbtb = &pred->btb.btb_data[i];
+				break;
+			}
+	} else {
+		pbtb = &pred->btb.btb_data[index];
+		
+		if (pbtb->addr != baddr)
+			pbtb = NULL;
+	}
+
+  /*
+   * We now also have a pointer into the BTB for a hit, or NULL otherwise
+   */
+
+	/* if this is a jump, ignore predicted direction; we know it's taken. */
+	if ((MD_OP_FLAGS(op) & (F_CTRL|F_UNCOND)) == (F_CTRL|F_UNCOND)) {
+		return (pbtb ? pbtb->target : 1);
+	}
+	
+	int prediction;
+		
+	/* otherwise we have a conditional branch */
+	if (!flow_mode) {
+		// There was a fwd valid outcome
+		if (fwd_valid_outcome != NULL) {
+			prediction = fwd_valid_outcome;
+		} else {
+			prediction = (*(dir_update_ptr->fwd_pdir1) >= 2);
+			
+			if (invert) {
+				prediction = !prediction;
+			}
 		}
-  } else {
-	  if (pbtb == NULL)
-		{
-		  /* BTB miss -- just return a predicted direction */
-		  if (invert) /* TS inverts result */
-		  {
-			return ((*(dir_update_ptr->rev_pdir1) >= 2)
-			  ? /* taken */ 0
-			  : /* not taken */ 1);
-		  }
-		  else 
-		  {
-			return ((*(dir_update_ptr->rev_pdir1) >= 2)
-				  ? /* taken */ 1
-				  : /* not taken */ 0);
-		  }
+	} else {
+		// There was a rev valid outcome
+		if (rev_valid_outcome != NULL) {
+			prediction = rev_valid_outcome;
+		} else {
+			prediction = (*(dir_update_ptr->rev_pdir1) >= 2);
+			
+			if (invert) {
+				prediction = !prediction;
+			}
 		}
-	  else
-		{
-		  /* BTB hit, so return target if it's a predicted-taken branch */
-		  if (invert) /* TS inverts result */
-		  {
-			return ((*(dir_update_ptr->rev_pdir1) >= 2)
-			  ? /* taken */ 0
-			  : /* not taken */ pbtb->target);
-		  }
-		  else
-		  {
-			return ((*(dir_update_ptr->rev_pdir1) >= 2)
-				  ? /* taken */ pbtb->target
-				  : /* not taken */ 0);
-		  }
-		}
-  }  
+	}
+	  
+	md_addr_t ret_target; 
+	
+	if (pbtb == NULL) {
+		/* BTB miss -- just return a predicted direction */
+		ret_target = 1;
+	} else {
+		/* BTB hit, so return target if it's a predicted-taken branch */
+		ret_target = pbtb->target;
+	}
+	
+	return (prediction
+		? /* taken */ ret_target
+		: /* not taken */ 0
+	);
 }
 
 /* Speculative execution can corrupt the ret-addr stack.  So for each
@@ -1758,299 +1650,304 @@ bpred_update(struct bpred_t *pred,	/* branch predictor instance */
 	     struct bpred_update_t *dir_update_ptr,  /* FWD pred state pointer */
 		 int flow_mode)  /* Flow mode (0=FWD; 1=REV) */
 {
-  struct bpred_btb_ent_t *pbtb = NULL;
-  struct bpred_btb_ent_t *lruhead = NULL, *lruitem = NULL;
-  int index, i;
+	struct bpred_btb_ent_t *pbtb = NULL;
+	struct bpred_btb_ent_t *lruhead = NULL, *lruitem = NULL;
+	int index, i;
   
-  /* don't change bpred state for non-branch instructions or if this
-   * is a stateless predictor*/
-  if (!(MD_OP_FLAGS(op) & F_CTRL))
-    return;
+   /* don't change bpred state for non-branch instructions or if this
+	* is a stateless predictor*/
+	if (!(MD_OP_FLAGS(op) & F_CTRL))
+		return;
 
-  /* Have a branch here */
+	/* Have a branch here */
 
-  /* Now accounting for FWD or REV stats */
+	/* Now accounting for FWD or REV stats */
 	if (!flow_mode) {
-	  if (correct)
-		pred->addr_hits++;
+		if (correct)
+			pred->addr_hits++;
 
-	  if (!!pred_taken == !!taken)
-		pred->dir_hits++;
-	  else
-		pred->misses++;
+		if (!!pred_taken == !!taken)
+			pred->dir_hits++;
+		else
+			pred->misses++;
 
-	  if (dir_update_ptr->fwd_dir.ras)
-		{
-		  pred->used_ras++;
-		  if (correct)
-		pred->ras_hits++;
-		}
-	  else if ((MD_OP_FLAGS(op) & (F_CTRL|F_COND)) == (F_CTRL|F_COND))
-		{
-		  if (dir_update_ptr->fwd_dir.meta)
-		pred->used_2lev++;
-		  else
-		pred->used_bimod++;
+		if (dir_update_ptr->fwd_dir.ras) {
+			pred->used_ras++;
+			
+			if (correct)
+				pred->ras_hits++;
+		} else if ((MD_OP_FLAGS(op) & (F_CTRL|F_COND)) == (F_CTRL|F_COND)) {
+			if (dir_update_ptr->fwd_dir.meta)
+				pred->used_2lev++;
+			else
+				pred->used_bimod++;
 		}
 		
 		/* keep stats about JR's; also, but don't change any bpred state for JR's
-	   * which are returns unless there's no retstack */
-	  if (MD_IS_INDIR(op))
-		{
-		  pred->jr_seen++;
-		  if (correct)
-		pred->jr_hits++;
+		* which are returns unless there's no retstack */
+		if (MD_IS_INDIR(op)) {
+			pred->jr_seen++;
+			if (correct)
+				pred->jr_hits++;
 		  
-		  if (!dir_update_ptr->fwd_dir.ras)
-		{
-		  pred->jr_non_ras_seen++;
-		  if (correct)
-			pred->jr_non_ras_hits++;
-		}
-		  else
-		{
-		  /* return that used the ret-addr stack; no further work to do */
-		  return;
-		}
+			if (!dir_update_ptr->fwd_dir.ras) {
+				pred->jr_non_ras_seen++;
+				
+				if (correct)
+					pred->jr_non_ras_hits++;
+			} else {
+				/* return that used the ret-addr stack; no further work to do */
+				return;
+			}
 		}
 	} else {
 		if (correct)
-		pred->reverse_addr_hits++;
+			pred->reverse_addr_hits++;
 
-	  if (!!pred_taken == !!taken)
-		pred->reverse_dir_hits++;
-	  else
-		pred->reverse_misses++;
+		if (!!pred_taken == !!taken)
+			pred->reverse_dir_hits++;
+		else
+			pred->reverse_misses++;
 
-	  if (dir_update_ptr->rev_dir.ras)
-		{
-		  pred->reverse_used_ras++;
-		  if (correct)
-		pred->reverse_ras_hits++;
-		}
-	  else if ((MD_OP_FLAGS(op) & (F_CTRL|F_COND)) == (F_CTRL|F_COND))
-		{
-		  if (dir_update_ptr->rev_dir.meta)
-		pred->reverse_used_2lev++;
-		  else
-		pred->reverse_used_bimod++;
+		if (dir_update_ptr->rev_dir.ras) {
+			pred->reverse_used_ras++;
+			
+			if (correct)
+				pred->reverse_ras_hits++;
+		} else if ((MD_OP_FLAGS(op) & (F_CTRL|F_COND)) == (F_CTRL|F_COND)) {
+			if (dir_update_ptr->rev_dir.meta)
+				pred->reverse_used_2lev++;
+			else
+				pred->reverse_used_bimod++;
 		}
 		
-		/* keep stats about JR's; also, but don't change any bpred state for JR's
-	   * which are returns unless there's no retstack */
-	  if (MD_IS_INDIR(op))
-		{
-		  pred->reverse_jr_seen++;
-		  if (correct)
-		pred->reverse_jr_hits++;
+		/* keep stats about rev JR's (CALLs); also, but don't change any bpred state for JR's
+		* which are returns unless there's no retstack */
+		if (MD_IS_CALL(op)) {
+			pred->reverse_jr_seen++;
+			
+			if (correct)
+				pred->reverse_jr_hits++;
 		  
-		  if (!dir_update_ptr->rev_dir.ras)
-		{
-		  pred->reverse_jr_non_ras_seen++;
-		  if (correct)
-			pred->reverse_jr_non_ras_hits++;
-		}
-		  else
-		{
-		  /* return that used the ret-addr stack; no further work to do */
-		  return;
-		}
+			if (!dir_update_ptr->rev_dir.ras) {
+				pred->reverse_jr_non_ras_seen++;
+				
+				if (correct)
+					pred->reverse_jr_non_ras_hits++;
+			} else {
+				/* return that used the ret-addr stack; no further work to do */
+				return;
+			}
 		}
 	}
 
-  /* Can exit now if this is a stateless predictor */
-  if (pred->class == BPredNotTaken || pred->class == BPredTaken)
-    return;
+	/* Can exit now if this is a stateless predictor */
+	if (pred->class == BPredNotTaken || pred->class == BPredTaken)
+		return;
 
-  /* 
-   * Now we know the branch didn't use the ret-addr stack, and that this
-   * is a stateful predictor 
-   */
-
+   /* 
+	* Now we know the branch didn't use the ret-addr stack, and that this
+	* is a stateful predictor 
+	*
+	* Added handling for REV where return constitutes a push
+	*/
+ 
 #ifdef RAS_BUG_COMPATIBLE
-  /* if function call, push return-address onto return-address stack */
-  if (MD_IS_CALL(op) && pred->retstack.size)
-    {
-      pred->retstack.tos = (pred->retstack.tos + 1)% pred->retstack.size;
-      pred->retstack.stack[pred->retstack.tos].target = 
-	baddr + sizeof(md_inst_t);
-	
-	  // Push in FWD but Pop in REV
-	  if (!flow_mode) {
-		pred->retstack_pushes++;
-	  } else {
-		pred->reverse_retstack_pops++;
-	  }
-    }
+	if (!flow_mode) {
+		/* if function call, push return-address onto return-address stack */
+		if (MD_IS_CALL(op) && pred->retstack.size) {
+			pred->retstack.tos = (pred->retstack.tos + 1)% pred->retstack.size;
+			pred->retstack.stack[pred->retstack.tos].target = baddr + sizeof(md_inst_t);
+		
+			pred->retstack_pushes++;
+		}
+	} else {
+		if (MD_IS_INDIR(op) && pred->retstack.size) {
+			pred->retstack.tos = (pred->retstack.tos + 1)% pred->retstack.size;
+			pred->retstack.stack[pred->retstack.tos].target = btarget;
+		
+			pred->reverse_retstack_pushes++;
+		}
+	}
 #endif /* RAS_BUG_COMPATIBLE */
 
 	// Updating BTB earlier to get target for rev pred updates
 	
 	/* find BTB entry if it's a taken branch (don't allocate for non-taken) */
-  if (taken)
-    {
-      index = (baddr >> MD_BR_SHIFT) & (pred->btb.sets - 1);
+	if (taken) {
+		index = (baddr >> MD_BR_SHIFT) & (pred->btb.sets - 1);
       
-      if (pred->btb.assoc > 1)
-	{
-	  index *= pred->btb.assoc;
+		if (pred->btb.assoc > 1) {
+			index *= pred->btb.assoc;
 	  
-	  /* Now we know the set; look for a PC match; also identify
-	   * MRU and LRU items */
-	  for (i = index; i < (index+pred->btb.assoc) ; i++)
-	    {
-	      if (pred->btb.btb_data[i].addr == baddr)
-		{
-		  /* match */
-		  assert(!pbtb);
-		  pbtb = &pred->btb.btb_data[i];
-		}
+		   /* Now we know the set; look for a PC match; also identify
+			* MRU and LRU items */
+			for (i = index; i < (index+pred->btb.assoc) ; i++) {
+				if (pred->btb.btb_data[i].addr == baddr) {
+					/* match */
+					assert(!pbtb);
+					pbtb = &pred->btb.btb_data[i];
+				}
 	      
-	      dassert(pred->btb.btb_data[i].prev 
-		      != pred->btb.btb_data[i].next);
-	      if (pred->btb.btb_data[i].prev == NULL)
-		{
-		  /* this is the head of the lru list, ie current MRU item */
-		  dassert(lruhead == NULL);
-		  lruhead = &pred->btb.btb_data[i];
-		}
-	      if (pred->btb.btb_data[i].next == NULL)
-		{
-		  /* this is the tail of the lru list, ie the LRU item */
-		  dassert(lruitem == NULL);
-		  lruitem = &pred->btb.btb_data[i];
-		}
-	    }
-	  dassert(lruhead && lruitem);
+				dassert(pred->btb.btb_data[i].prev != pred->btb.btb_data[i].next);
+				if (pred->btb.btb_data[i].prev == NULL) {
+					/* this is the head of the lru list, ie current MRU item */
+					dassert(lruhead == NULL);
+					lruhead = &pred->btb.btb_data[i];
+				}
+				
+				if (pred->btb.btb_data[i].next == NULL) {
+					/* this is the tail of the lru list, ie the LRU item */
+					dassert(lruitem == NULL);
+					lruitem = &pred->btb.btb_data[i];
+				}
+			}
+			dassert(lruhead && lruitem);
 	  
-	  if (!pbtb)
-	    /* missed in BTB; choose the LRU item in this set as the victim */
-	    pbtb = lruitem;	
-	  /* else hit, and pbtb points to matching BTB entry */
-	  
-	  /* Update LRU state: selected item, whether selected because it
-	   * matched or because it was LRU and selected as a victim, becomes 
-	   * MRU */
-	  if (pbtb != lruhead)
-	    {
-	      /* this splices out the matched entry... */
-	      if (pbtb->prev)
-		pbtb->prev->next = pbtb->next;
-	      if (pbtb->next)
-		pbtb->next->prev = pbtb->prev;
-	      /* ...and this puts the matched entry at the head of the list */
-	      pbtb->next = lruhead;
-	      pbtb->prev = NULL;
-	      lruhead->prev = pbtb;
-	      dassert(pbtb->prev || pbtb->next);
-	      dassert(pbtb->prev != pbtb->next);
-	    }
-	  /* else pbtb is already MRU item; do nothing */
-	}
-      else
-	pbtb = &pred->btb.btb_data[index];
-    }
+			if (!pbtb)
+				/* missed in BTB; choose the LRU item in this set as the victim */
+				pbtb = lruitem;	
+				/* else hit, and pbtb points to matching BTB entry */
+			  
+		   /* Update LRU state: selected item, whether selected because it
+			* matched or because it was LRU and selected as a victim, becomes 
+			* MRU */
+			if (pbtb != lruhead) {
+				/* this splices out the matched entry... */
+				if (pbtb->prev)
+					pbtb->prev->next = pbtb->next;
+				if (pbtb->next)
+					pbtb->next->prev = pbtb->prev;
+				/* ...and this puts the matched entry at the head of the list */
+				pbtb->next = lruhead;
+				pbtb->prev = NULL;
+				lruhead->prev = pbtb;
+				dassert(pbtb->prev || pbtb->next);
+				dassert(pbtb->prev != pbtb->next);
+			}
+			/* else pbtb is already MRU item; do nothing */
+		} else {
+			pbtb = &pred->btb.btb_data[index];
+		}
       
-  /* 
-   * Now 'p' is a possibly null pointer into the direction prediction table, 
-   * and 'pbtb' is a possibly null pointer into the BTB (either to a 
-   * matched-on entry or a victim which was LRU in its set)
-   */
-   
-   /* update BTB (but only for taken branches) */
-  if (pbtb)
-    {
-      /* update current information */
-      dassert(taken);
+	   /* 
+		* Now 'p' is a possibly null pointer into the direction prediction table, 
+		* and 'pbtb' is a possibly null pointer into the BTB (either to a 
+		* matched-on entry or a victim which was LRU in its set)
+		*/
+		   
+		/* update BTB (but only for taken branches) */
+		if (pbtb) {
+			/* update current information */
+			dassert(taken);
 
-      if (pbtb->addr == baddr)
-	{
-	  if (!correct)
-	    pbtb->target = btarget;
+			if (pbtb->addr == baddr) {
+				if (!correct)
+					pbtb->target = btarget;
+			} else {
+				/* enter a new branch in the table */
+				pbtb->addr = baddr;
+				pbtb->op = op;
+				pbtb->target = btarget;
+			}
+		}
 	}
-      else
-	{
-	  /* enter a new branch in the table */
-	  pbtb->addr = baddr;
-	  pbtb->op = op;
-	  pbtb->target = btarget;
-	}
-    }
 
-  int key, fv, rv, oc;
-  md_addr_t fhb_addr;
+	int fwd_key, rev_key, fv, rv, oc;
+	md_addr_t fhb_addr;
   
 
-  /* Get keys before updating L1 table*/
-  if ((MD_OP_FLAGS(op) & (F_CTRL|F_UNCOND)) != (F_CTRL|F_UNCOND) && ((pred->class == BPredTSBP) || (pred->class == BPredCHBP) || (pred->class == BPredOHT) || (pred->class == BPredMBP))) {
-	// Get key before updating GHR!!!!
-        key = key_from_features (pred->fwd_dirpred.twolev, baddr); // Get unmasked key from GHR and PC
-  }
+	/* Get keys before updating L1 table*/
+	if ((MD_OP_FLAGS(op) & (F_CTRL|F_UNCOND)) != (F_CTRL|F_UNCOND) && ((pred->class == BPredTSBP) || (pred->class == BPredCHBP) || (pred->class == BPredOHT) || (pred->class == BPredMBP))) {
+		// Get keys before updating GHR!!!!
+		fwd_key = key_from_features (pred->fwd_dirpred.twolev, baddr); // Get unmasked key from GHR and PC
+		rev_key = key_from_features (pred->rev_dirpred.twolev, baddr); // Get unmasked key from GHR and PC
+	}
 
-  /* update L1 table if appropriate */
-  /* L1 table is updated unconditionally for combining predictor too */
-  if ((MD_OP_FLAGS(op) & (F_CTRL|F_UNCOND)) != (F_CTRL|F_UNCOND) &&
-      ((pred->class == BPredComb) || (pred->class == BPred2Level) || (pred->class == BPredTSBP) || (pred->class == BPredCHBP) || (pred->class == BPredOB) || (pred->class == BPredOHT) || (pred->class == BPredMBP)))         
-    {
-      int l1index, shift_reg;
+	/* update L1 table if appropriate */
+	/* L1 table is updated unconditionally for combining predictor too */
+	if ((MD_OP_FLAGS(op) & (F_CTRL|F_UNCOND)) != (F_CTRL|F_UNCOND) &&
+	((pred->class == BPredComb) || (pred->class == BPred2Level) || (pred->class == BPredTSBP) || (pred->class == BPredCHBP) || (pred->class == BPredOB) || (pred->class == BPredOHT) || (pred->class == BPredMBP))) {
+		int l1index, shift_reg;
       
-      /* also update appropriate L1 history register */
-      l1index =
-	(baddr >> MD_BR_SHIFT) & (pred->fwd_dirpred.twolev->config.two.l1size - 1);
-      shift_reg =
-	(pred->fwd_dirpred.twolev->config.two.shiftregs[l1index] << 1) | (!!taken);
-      pred->fwd_dirpred.twolev->config.two.shiftregs[l1index] =
-	shift_reg & ((1 << pred->fwd_dirpred.twolev->config.two.shift_width) - 1);
+		/* also update appropriate L1 history registers; Shift R or L depending on flow mode */
+		if (!flow_mode) {
+			l1index = (baddr >> MD_BR_SHIFT) & (pred->fwd_dirpred.twolev->config.two.l1size - 1);
+			shift_reg = (pred->fwd_dirpred.twolev->config.two.shiftregs[l1index] << 1) | (!!taken);
+			pred->fwd_dirpred.twolev->config.two.shiftregs[l1index] = shift_reg & ((1 << pred->fwd_dirpred.twolev->config.two.shift_width) - 1);
+			
+			l1index = (baddr >> MD_BR_SHIFT) & (pred->rev_dirpred.twolev->config.two.l1size - 1);
+			shift_reg = (pred->rev_dirpred.twolev->config.two.shiftregs[l1index] << 1) | (!!taken);
+			pred->rev_dirpred.twolev->config.two.shiftregs[l1index] = shift_reg & ((1 << pred->rev_dirpred.twolev->config.two.shift_width) - 1);
+		} else {
+			l1index = (baddr >> MD_BR_SHIFT) & (pred->fwd_dirpred.twolev->config.two.l1size - 1);
+			shift_reg = (pred->fwd_dirpred.twolev->config.two.shiftregs[l1index] >> 1) | ((!!taken) << (pred->fwd_dirpred.twolev->config.two.shift_width - 1));
+			pred->fwd_dirpred.twolev->config.two.shiftregs[l1index] = shift_reg & ((1 << pred->fwd_dirpred.twolev->config.two.shift_width) - 1);
+			
+			l1index = (baddr >> MD_BR_SHIFT) & (pred->rev_dirpred.twolev->config.two.l1size - 1);
+			shift_reg = (pred->rev_dirpred.twolev->config.two.shiftregs[l1index] >> 1) | ((!!taken) << (pred->rev_dirpred.twolev->config.two.shift_width - 1));
+			pred->rev_dirpred.twolev->config.two.shiftregs[l1index] = shift_reg & ((1 << pred->rev_dirpred.twolev->config.two.shift_width) - 1);
+		}
 	
 		//Update FHB and shift up or down depending on flow mode
 		if (!flow_mode) {
-			fhb_addr = pred->fhb.addr[pred->fhb.size - 1];
-			fv = pred->fhb.fv[pred->fhb.size - 1];
-			rv = pred->fhb.rv[pred->fhb.size - 1];
-			oc = pred->fhb.o[pred->fhb.size - 1];
+			fhb_addr = pred->fhb.addr[pred->fhb.top];
+			fv = pred->fhb.fv[pred->fhb.top];
+			rv = pred->fhb.rv[pred->fhb.top];
+			oc = pred->fhb.o[pred->fhb.top];
 			
-			for (int i = pred->fhb.size; i > 1; i--) {
-				pred->fhb.addr[i - 1] = pred->fhb.addr[i - 2];
-				pred->fhb.fv[i - 1] = pred->fhb.fv[i - 2];
-				pred->fhb.rv[i - 1] = pred->fhb.rv[i - 2];
-				pred->fhb.o[i - 1] = pred->fhb.o[i - 2];
+			if (pred->fhb.top > 0) {
+				pred->fhb.top--;
+			} else {
+				pred->fhb.top = pred->fhb.size - 1;
+			}
+			
+			if (pred->fhb.bot > 0) {
+				pred->fhb.bot--;
+			} else {
+				pred->fhb.bot = pred->fhb.size - 1;
 			}
 			
 			if (pbtb) {
-				pred->fhb.addr[0] = pbtb->target;
+				pred->fhb.addr[pred->fhb.bot] = pbtb->target;
 			} else {
-				pred->fhb.addr[0] = NULL;
+				pred->fhb.addr[pred->fhb.bot] = NULL;
 			}
 			
-			pred->fhb.fv[0] = 0;
-			pred->fhb.rv[0] = 1;
-			pred->fhb.o[0] = taken;
+			pred->fhb.fv[pred->fhb.bot] = 0;
+			pred->fhb.rv[pred->fhb.bot] = 1;
+			pred->fhb.o[pred->fhb.bot] = taken;
 		} else {
-			fhb_addr = pred->fhb.addr[0];
-			fv = pred->fhb.fv[0];
-			rv = pred->fhb.rv[0];
-			oc = pred->fhb.o[0];
+			fhb_addr = pred->fhb.addr[pred->fhb.bot];
+			fv = pred->fhb.fv[pred->fhb.bot];
+			rv = pred->fhb.rv[pred->fhb.bot];
+			oc = pred->fhb.o[pred->fhb.bot];
 			
-			for (int i = 0; i < pred->fhb.size - 1; i++) {
-				pred->fhb.addr[i] = pred->fhb.addr[i+1];
-				pred->fhb.fv[i] = pred->fhb.fv[i+1];
-				pred->fhb.rv[i] = pred->fhb.rv[i+1];
-				pred->fhb.o[i] = pred->fhb.o[i+1];
+			if (pred->fhb.top < (pred->fhb.size - 1)) {
+				pred->fhb.top++;
+			} else {
+				pred->fhb.top = 0;
+			}
+			
+			if (pred->fhb.bot < (pred->fhb.size - 1)) {
+				pred->fhb.bot++;
+			} else {
+				pred->fhb.bot = 0;
 			}
 			
 			if (pbtb) {
-				pred->fhb.addr[pred->fhb.size - 1] = pbtb->addr;
+				pred->fhb.addr[pred->fhb.top] = pbtb->addr;
 			} else {
-				pred->fhb.addr[pred->fhb.size - 1] = NULL;
+				pred->fhb.addr[pred->fhb.top] = NULL;
 			}
 			
-			pred->fhb.fv[pred->fhb.size - 1] = 1;
-			pred->fhb.rv[pred->fhb.size - 1] = 0;
-			pred->fhb.o[pred->fhb.size - 1] = taken;
+			pred->fhb.fv[pred->fhb.top] = 1;
+			pred->fhb.rv[pred->fhb.top] = 0;
+			pred->fhb.o[pred->fhb.top] = taken;
 		}
     }
 
-  /***********************IF TS update L1 table as above, also update correctness buffer*****************************/
+	/***********************IF TS, also update correctness buffer*****************************/
 	if ((MD_OP_FLAGS(op) & (F_CTRL|F_UNCOND)) != (F_CTRL|F_UNCOND) && (pred->class == BPredTSBP)) {
 		//int l1index, shift_reg;
 		
@@ -2107,7 +2004,7 @@ bpred_update(struct bpred_t *pred,	/* branch predictor instance */
 		pred->fwd_dirpred.tsbp->ts.head_table[key] = pred->fwd_dirpred.tsbp->ts.tail;   //else update head table
 	}
   
-  /***********************IF CHBP update L1 table as above, also update correctness history table*****************************/
+	/***********************IF CHBP, also update correctness history table*****************************/
 	if ((MD_OP_FLAGS(op) & (F_CTRL|F_UNCOND)) != (F_CTRL|F_UNCOND) && (pred->class == BPredCHBP)) {
 		//int l1index, shift_reg;
 		
@@ -2173,29 +2070,41 @@ bpred_update(struct bpred_t *pred,	/* branch predictor instance */
 	if ((MD_OP_FLAGS(op) & (F_CTRL|F_UNCOND)) != (F_CTRL|F_UNCOND) && ((pred->class == BPredOB) || (pred->class == BPredMBP))) {
 		//Update OB and shift up (right) or down (left) depending on flow mode
 		if (!flow_mode) {
-			for (int i = pred->ob.width; i > 1; i--) {
-				pred->ob.fv[i - 1] = pred->ob.fv[i - 2];
-				pred->ob.rv[i - 1] = pred->ob.rv[i - 2];
-				pred->ob.oc[i - 1] = pred->ob.oc[i - 2];
+			if (pred->ob.end > 0) {
+				pred->ob.end--;
+			} else {
+				pred->ob.end = pred->ob.width - 1;
 			}
 			
-			pred->ob.fv[0] = 0;
-			pred->ob.rv[0] = 1;
-			pred->ob.oc[0] = taken;
+			if (pred->ob.beg > 0) {
+				pred->ob.beg--;
+			} else {
+				pred->ob.beg = pred->ob.width - 1;
+			}
+			
+			pred->ob.fv[pred->ob.beg] = 0;
+			pred->ob.rv[pred->ob.beg] = 1;
+			pred->ob.oc[pred->ob.beg] = taken;
 		} else {
-			for (int i = 0; i < pred->ob.width - 1; i++) {
-				pred->ob.fv[i] = pred->ob.fv[i+1];
-				pred->ob.rv[i] = pred->ob.rv[i+1];
-				pred->ob.oc[i] = pred->ob.oc[i+1];
+			if (pred->ob.end < (pred->ob.width - 1)) {
+				pred->ob.end++;
+			} else {
+				pred->ob.end = 0;
 			}
 			
-			pred->ob.fv[pred->ob.width - 1] = 1;
-			pred->ob.rv[pred->ob.width - 1] = 0;
-			pred->ob.oc[pred->ob.width - 1] = taken;
+			if (pred->ob.beg < (pred->ob.width - 1)) {
+				pred->ob.beg++;
+			} else {
+				pred->ob.beg = 0;
+			}
+			
+			pred->ob.fv[pred->ob.end] = 1;
+			pred->ob.rv[pred->ob.end] = 0;
+			pred->ob.oc[pred->ob.end] = taken;
 		}
 	}
 	
-	/* Update OHT if PHT or MBP */
+	/* Update OHT if OHT or MBP */
 	if ((MD_OP_FLAGS(op) & (F_CTRL|F_UNCOND)) != (F_CTRL|F_UNCOND) && ((pred->class == BPredOHT) || (pred->class == BPredMBP))) {
 		// Update only one OHT depending on the flow and only if fhb addr is set
 		if (fhb_addr) {
@@ -2235,23 +2144,19 @@ bpred_update(struct bpred_t *pred,	/* branch predictor instance */
         }
     }
 
-  /* combining predictor also updates second predictor and meta predictor */
-  /* second direction predictor */
-  if (dir_update_ptr->fwd_pdir2)
-    {
-      if (taken)
-	{
-	  if (*dir_update_ptr->fwd_pdir2 < 3)
-	    ++*dir_update_ptr->fwd_pdir2;
-	}
-      else
-	{ /* not taken */
-	  if (*dir_update_ptr->fwd_pdir2 > 0)
-	    --*dir_update_ptr->fwd_pdir2;
-	}
+	/* combining predictor also updates second predictor and meta predictor */
+	/* second direction predictor */
+	if (dir_update_ptr->fwd_pdir2) {
+		if (taken) {
+			if (*dir_update_ptr->fwd_pdir2 < 3)
+				++*dir_update_ptr->fwd_pdir2;
+		} else { /* not taken */
+			if (*dir_update_ptr->fwd_pdir2 > 0)
+				--*dir_update_ptr->fwd_pdir2;
+		}
     }
 	
-  /* Acounting for reverse dir pointer now */
+	/* Acounting for reverse dir pointer now */
 	if (dir_update_ptr->rev_pdir2) {  
         if (taken) {
 			if (*dir_update_ptr->rev_pdir2 < 3)
@@ -2262,46 +2167,35 @@ bpred_update(struct bpred_t *pred,	/* branch predictor instance */
         }
     }
 
-  /* meta predictor */
-  if (dir_update_ptr->fwd_pmeta)
-    {
-      if (dir_update_ptr->fwd_dir.bimod != dir_update_ptr->fwd_dir.twolev)
-	{
-	  /* we only update meta predictor if directions were different */
-	  if (dir_update_ptr->fwd_dir.twolev == (unsigned int)taken)
-	    {
-	      /* 2-level predictor was correct */
-	      if (*dir_update_ptr->fwd_pmeta < 3)
-		++*dir_update_ptr->fwd_pmeta;
-	    }
-	  else
-	    {
-	      /* bimodal predictor was correct */
-	      if (*dir_update_ptr->fwd_pmeta > 0)
-		--*dir_update_ptr->fwd_pmeta;
-	    }
-	}
+	/* meta predictor */
+	if (dir_update_ptr->fwd_pmeta) {
+		if (dir_update_ptr->fwd_dir.bimod != dir_update_ptr->fwd_dir.twolev) {
+			/* we only update meta predictor if directions were different */
+			if (dir_update_ptr->fwd_dir.twolev == (unsigned int)taken) {
+				/* 2-level predictor was correct */
+				if (*dir_update_ptr->fwd_pmeta < 3)
+					++*dir_update_ptr->fwd_pmeta;
+			} else {
+				/* bimodal predictor was correct */
+				if (*dir_update_ptr->fwd_pmeta > 0)
+					--*dir_update_ptr->fwd_pmeta;
+			}
+		}
     }
 	
-   /* Acounting for reverse dir pointer now */
-  if (dir_update_ptr->rev_pmeta)
-    {
-      if (dir_update_ptr->rev_dir.bimod != dir_update_ptr->rev_dir.twolev)
-	{
-	  /* we only update meta predictor if directions were different */
-	  if (dir_update_ptr->rev_dir.twolev == (unsigned int)taken)
-	    {
-	      /* 2-level predictor was correct */
-	      if (*dir_update_ptr->rev_pmeta < 3)
-		++*dir_update_ptr->rev_pmeta;
-	    }
-	  else
-	    {
-	      /* bimodal predictor was correct */
-	      if (*dir_update_ptr->rev_pmeta > 0)
-		--*dir_update_ptr->rev_pmeta;
-	    }
-	}
+	/* Acounting for reverse dir pointer now */
+	if (dir_update_ptr->rev_pmeta) {
+		if (dir_update_ptr->rev_dir.bimod != dir_update_ptr->rev_dir.twolev) {
+			/* we only update meta predictor if directions were different */
+			if (dir_update_ptr->rev_dir.twolev == (unsigned int)taken) {
+				/* 2-level predictor was correct */
+				if (*dir_update_ptr->rev_pmeta < 3)
+					++*dir_update_ptr->rev_pmeta;
+			} else {
+				/* bimodal predictor was correct */
+				if (*dir_update_ptr->rev_pmeta > 0)
+					--*dir_update_ptr->rev_pmeta;
+			}
+		}
     }
 }
-

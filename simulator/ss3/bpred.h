@@ -171,6 +171,7 @@ struct bpred_chbp_t {
   } chbp;
 };
 
+/* Outcome History Table (OHT) def */
 struct bpred_oht_t {
   enum bpred_class class;				/* type of predictor */
   struct {
@@ -205,6 +206,8 @@ struct bpred_t {
   /* Future History Buffer (FHB) for reversible 2-level/MBP */
   struct {
 	int size;	/* number of FHB entries should be L1 width + 1 */
+	int top;	/* Top of FHB window */
+	int bot;	/* Bottom of FHB Window */
 	int *fv;    /* fwd valid bits for prediction use in fwd mode */
 	int *rv;    /* rev valid bits for prediction use in rev mode */
 	int *o;     /* outcome bits for prediction use in fwd & rev modes */
@@ -214,6 +217,8 @@ struct bpred_t {
   /* Outcome Buffer (OB) for use with reversible 2-level/MBP */
   struct {
 	int width;	/* number of OB entries; independent of any L table dimenssions */
+	int end;	/* End of buffer window at width - 1 */
+	int beg;	/* Beginning of buffer window at 0 */
 	int *fv;    /* fwd valid bits for prediction use in fwd mode */
 	int *rv;    /* rev valid bits for prediction use in rev mode */
 	int *oc;     /* outcome bits for prediction use in fwd & rev modes */
@@ -341,7 +346,13 @@ struct bpred_oht_t *		/* outcome history table instance */
 bpred_oht_create (
   enum bpred_class class,	/* type of predictor to create */
   unsigned int oht_size);			/* OHT size */
+  
+/* create a future history buffer (FHB) */
+void bpred_fhb_create (bpred_t *pred, int size);
 
+/* Create an outcome buffer (OB) */
+void bpred_ob_create (bpred_t *pred, int width);
+	
 /* print branch predictor configuration */
 void
 bpred_config(struct bpred_t *pred,	/* branch predictor instance */
