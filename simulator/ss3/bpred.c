@@ -285,7 +285,7 @@ bpred_create(enum bpred_class class,	/* type of predictor to create */
 }
 
 /* Create an instance of the Outcome Buffer (OB) */
-void bpred_ob_create (bpred_t *pred, int width) {
+void bpred_ob_create (struct bpred_t *pred, int width) {
 	// Outcome Buffer (OB)
 	pred->ob.width = width; /* hardcoding to 16 kb for now, will make configurable later */
 	
@@ -304,7 +304,7 @@ void bpred_ob_create (bpred_t *pred, int width) {
 }
 
 /* Create an instance of the Future History Buffer (FHB) */
-void bpred_fhb_create (bpred_t *pred, int size) {
+void bpred_fhb_create (struct bpred_t *pred, int size) {
 	pred->fhb.size = size;
 	
 	pred->fhb.top = size - 1;
@@ -1995,13 +1995,13 @@ bpred_update(struct bpred_t *pred,	/* branch predictor instance */
       
 		/*if incorrect base prediction, update head table*/
 		if (!!base_outcome != !!taken) {
-			if(!pred->fwd_dirpred.tsbp->ts.replay && pred->fwd_dirpred.tsbp->ts.head_table[key] != NULL) { /*if not in replay mode, update head and set replay flag*/
-				pred->fwd_dirpred.tsbp->ts.head = pred->fwd_dirpred.tsbp->ts.head_table[key];
+			if(!pred->fwd_dirpred.tsbp->ts.replay && pred->fwd_dirpred.tsbp->ts.head_table[fwd_key] != NULL) { /*if not in replay mode, update head and set replay flag*/
+				pred->fwd_dirpred.tsbp->ts.head = pred->fwd_dirpred.tsbp->ts.head_table[fwd_key];
 				pred->fwd_dirpred.tsbp->ts.replay = TRUE;
 			}
 		}
 
-		pred->fwd_dirpred.tsbp->ts.head_table[key] = pred->fwd_dirpred.tsbp->ts.tail;   //else update head table
+		pred->fwd_dirpred.tsbp->ts.head_table[fwd_key] = pred->fwd_dirpred.tsbp->ts.tail;   //else update head table
 	}
   
 	/***********************IF CHBP, also update correctness history table*****************************/
@@ -2024,18 +2024,18 @@ bpred_update(struct bpred_t *pred,	/* branch predictor instance */
 		bool_t just_disabled_replay = FALSE;
 
 		/*Set the base outcome; Also if in replay mode and chbp_outcome is incorrect, turn off replay mode*/
-		if (pred->fwd_dirpred.chbp->chbp.cht_replay[key] && (pred->fwd_dirpred.chbp->chbp.cht_spc[key] == baddr)) {
+		if (pred->fwd_dirpred.chbp->chbp.cht_replay[fwd_key] && (pred->fwd_dirpred.chbp->chbp.cht_spc[fwd_key] == baddr)) {
 			pred->replays++;
 			chbp_outcome = pred_taken;
 
-			if (pred->fwd_dirpred.chbp->chbp.enabled && !pred->fwd_dirpred.chbp->chbp.cht_correct[key]) {
+			if (pred->fwd_dirpred.chbp->chbp.enabled && !pred->fwd_dirpred.chbp->chbp.cht_correct[fwd_key]) {
 				base_outcome = !pred_taken;
 			} else {
 				base_outcome = pred_taken;
 			}
 
 			if (!!chbp_outcome != !!taken) {
-				pred->fwd_dirpred.chbp->chbp.cht_replay[key] = FALSE;
+				pred->fwd_dirpred.chbp->chbp.cht_replay[fwd_key] = FALSE;
 				just_disabled_replay = TRUE;
 			}
 		} else {
@@ -2043,17 +2043,17 @@ bpred_update(struct bpred_t *pred,	/* branch predictor instance */
 		}
 		
 		/*determine if actual outcome (taken) of predicted direction is correct and update correctness bit*/
-		pred->fwd_dirpred.chbp->chbp.cht_correct[key] = (!!base_outcome == !!taken);  /*1 = base predictor correct. 0 = prediction incorrect*/
+		pred->fwd_dirpred.chbp->chbp.cht_correct[fwd_key] = (!!base_outcome == !!taken);  /*1 = base predictor correct. 0 = prediction incorrect*/
 		  
 		/*if not in replay mode and base outcome incorrect, set replay flag as long as it wasn't just disabled*/
-		if ((!!base_outcome != !!taken) && !pred->fwd_dirpred.chbp->chbp.cht_replay[key] && !just_disabled_replay) {
-			pred->fwd_dirpred.chbp->chbp.cht_replay[key] = TRUE;
+		if ((!!base_outcome != !!taken) && !pred->fwd_dirpred.chbp->chbp.cht_replay[fwd_key] && !just_disabled_replay) {
+			pred->fwd_dirpred.chbp->chbp.cht_replay[fwd_key] = TRUE;
 		}
 		
 		/* Update other correctness history table bits */
-		pred->fwd_dirpred.chbp->chbp.cht_dpc[key] = btarget;
-		pred->fwd_dirpred.chbp->chbp.cht_valid[key] = TRUE;
-		pred->fwd_dirpred.chbp->chbp.cht_spc[key] = baddr;
+		pred->fwd_dirpred.chbp->chbp.cht_dpc[fwd_key] = btarget;
+		pred->fwd_dirpred.chbp->chbp.cht_valid[fwd_key] = TRUE;
+		pred->fwd_dirpred.chbp->chbp.cht_spc[fwd_key] = baddr;
 		
 		/* make sure no other matching spc keys are valid*/
 		//int valid_key;
@@ -2115,11 +2115,11 @@ bpred_update(struct bpred_t *pred,	/* branch predictor instance */
 			rev_key = rev_key & (pred->rev_dirpred.oht->oht.size - 1); // mask key based on outcome history table size
 			
 			if (!flow_mode) {
-				pred->rev_dirpred.oht->oht.oc[fwd_key] = taken;
-				pred->rev_dirpred.oht->oht.valid[fwd_key] = 1;
+				pred->rev_dirpred.oht->oht.oc[rev_key] = oc; //Update with oc since it is the past outcome that was waiting in the FHB
+				pred->rev_dirpred.oht->oht.valid[rev_key] = 1;
 			} else {
-				pred->fwd_dirpred.oht->oht.oc[key] = taken;
-				pred->fwd_dirpred.oht->oht.valid[key] = 1;
+				pred->fwd_dirpred.oht->oht.oc[fwd_key] = oc;
+				pred->fwd_dirpred.oht->oht.valid[fwd_key] = 1;
 			}
 		}		
 	}
