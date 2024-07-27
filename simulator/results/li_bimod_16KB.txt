@@ -15,7 +15,7 @@ of SimpleScalar, LLC (info@simplescalar.com).
 
 sim: command line: /home/greggbyr/common/Documents/MBP_FARS/simulator/ss3/sim-outorder -max:inst 10000000 -bpred bimod -bpred:bimod 16384 run.li au.lsp boyer.lsp browse.lsp ctak.lsp dderiv.lsp deriv.lsp destru0.lsp destru1.lsp destru2.lsp destrum0.lsp destrum1.lsp destrum2.lsp div2.lsp puzzle0.lsp puzzle1.lsp tak0.lsp tak1.lsp tak2.lsp takr.lsp triang.lsp xit.lsp 
 
-sim: simulation started @ Fri Jul 26 02:42:01 2024, options follow:
+sim: simulation started @ Fri Jul 26 13:49:21 2024, options follow:
 
 sim-outorder: This simulator implements a very detailed out-of-order issue
 superscalar processor with a two-level memory system and speculative
@@ -149,8 +149,8 @@ sim_num_refs                4210256 # total number of loads and stores committed
 sim_num_loads               2550719 # total number of loads committed
 sim_num_stores         1659537.0000 # total number of stores committed
 sim_num_branches            2297379 # total number of branches committed
-sim_elapsed_time                 11 # total simulation time in seconds
-sim_inst_rate           909091.1818 # simulation speed (in insts/sec)
+sim_elapsed_time                 14 # total simulation time in seconds
+sim_inst_rate           714285.9286 # simulation speed (in insts/sec)
 sim_total_insn             11939007 # total number of instructions executed
 sim_total_refs              5005574 # total number of loads and stores executed
 sim_total_loads             3078611 # total number of loads executed
@@ -280,7 +280,7 @@ ld_target_big_endian              0 # target executable endian-ness, non-zero if
 mem.page_count                   92 # total number of pages allocated
 mem.page_mem                   368k # total size of memory pages allocated
 mem.ptab_misses                 110 # total first level page table misses
-mem.ptab_accesses          82653508 # total page table accesses
+mem.ptab_accesses          82653424 # total page table accesses
 mem.ptab_miss_rate           0.0000 # first level page table miss rate
 
 Post-run li

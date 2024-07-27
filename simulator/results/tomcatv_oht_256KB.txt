@@ -1,0 +1,14 @@
+reading benchmark database ./bench.db
+Doing tomcatv
+Installing tomcatv
+ln -s /home/greggbyr/common/Documents/MBP_FARS/simulator/bench/little/tomcatv.ss run.tomcatv
+Pre-run tomcatv
+cp /home/greggbyr/common/Documents/MBP_FARS/simulator/input/ref/tomcatv.* . ; cp /home/greggbyr/common/Documents/MBP_FARS/simulator/input/ref/TOMCATV.MODEL .
+cp: cannot stat '/home/greggbyr/common/Documents/MBP_FARS/simulator/input/ref/tomcatv.*': No such file or directory
+cp: cannot stat '/home/greggbyr/common/Documents/MBP_FARS/simulator/input/ref/TOMCATV.MODEL': No such file or directory
+Run tomcatv
+/home/greggbyr/common/Documents/MBP_FARS/simulator/ss3/sim-outorder -max:inst 10000000 -bpred oht -bpred:oht 1 262144 18 1 run.tomcatv  < tomcatv.in > tomcatv.out
+sh: 1: cannot open tomcatv.in: No such file
+****** program returns ERROR 512
+Post-run tomcatv
+rm -f -r tomcatv.* TOMCATV.*

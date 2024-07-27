@@ -154,7 +154,7 @@ bpred_create(enum bpred_class class,	/* type of predictor to create */
 	
   case BPredOB:
 	pred->fwd_dirpred.twolev = 
-      bpred_dir_create(class, l1size, l2size, shift_width, xor);
+      bpred_dir_create(BPred2Level, l1size, l2size, shift_width, xor);
 	  
 	//Need reverse 2-level now too
 	pred->rev_dirpred.twolev = 
@@ -193,7 +193,7 @@ bpred_create(enum bpred_class class,	/* type of predictor to create */
 	
   case BPredOHT:
 	pred->fwd_dirpred.twolev = 
-      bpred_dir_create(class, l1size, l2size, shift_width, xor);
+      bpred_dir_create(BPred2Level, l1size, l2size, shift_width, xor);
 	  
 	//Need reverse 2-level now too
 	pred->rev_dirpred.twolev = 
@@ -225,7 +225,7 @@ bpred_create(enum bpred_class class,	/* type of predictor to create */
 	
   case BPredMBP:
     pred->fwd_dirpred.twolev = 
-      bpred_dir_create(class, l1size, l2size, shift_width, xor);
+      bpred_dir_create(BPred2Level, l1size, l2size, shift_width, xor);
 	  
 	//Need reverse 2-level now too
 	pred->rev_dirpred.twolev = 

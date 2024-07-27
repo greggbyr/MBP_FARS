@@ -15,7 +15,7 @@ of SimpleScalar, LLC (info@simplescalar.com).
 
 sim: command line: /home/greggbyr/common/Documents/MBP_FARS/simulator/ss3/sim-outorder -max:inst 10000000 -bpred bimod -bpred:bimod 131072 run.gcc varasm.i -quiet -funroll-loops -fforce-mem -fcse-follow-jumps -fcse-skip-blocks -fexpensive-optimizations -fstrength-reduce -fpeephole -fschedule-insns -finline-functions -fschedule-insns2 -O -o varasm.s 
 
-sim: simulation started @ Fri Jul 26 02:44:32 2024, options follow:
+sim: simulation started @ Fri Jul 26 13:52:21 2024, options follow:
 
 sim-outorder: This simulator implements a very detailed out-of-order issue
 superscalar processor with a two-level memory system and speculative
@@ -151,8 +151,8 @@ sim_num_refs                3825300 # total number of loads and stores committed
 sim_num_loads               2544359 # total number of loads committed
 sim_num_stores         1280941.0000 # total number of stores committed
 sim_num_branches            2060457 # total number of branches committed
-sim_elapsed_time                 12 # total simulation time in seconds
-sim_inst_rate           833333.5833 # simulation speed (in insts/sec)
+sim_elapsed_time                 14 # total simulation time in seconds
+sim_inst_rate           714285.9286 # simulation speed (in insts/sec)
 sim_total_insn             11433655 # total number of instructions executed
 sim_total_refs              4310196 # total number of loads and stores executed
 sim_total_loads             2925679 # total number of loads executed
@@ -281,8 +281,8 @@ ld_environ_base          0x7fff8000 # program environment base address address
 ld_target_big_endian              0 # target executable endian-ness, non-zero if big endian
 mem.page_count                  727 # total number of pages allocated
 mem.page_mem                  2908k # total size of memory pages allocated
-mem.ptab_misses                1032 # total first level page table misses
-mem.ptab_accesses          93254761 # total page table accesses
+mem.ptab_misses                1033 # total first level page table misses
+mem.ptab_accesses          93254678 # total page table accesses
 mem.ptab_miss_rate           0.0000 # first level page table miss rate
 
 Post-run gcc
