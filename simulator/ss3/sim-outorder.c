@@ -2556,7 +2556,7 @@ ruu_commit(void)
 			/* actual target address */rs->next_PC,
 			/* opcode */rs->op,
             /* dir predictor update pointer */&rs->dir_update,
-			/* last stack recover idx */stack_recover_idx
+			/* last stack recover idx */rs->stack_recover_idx
 		);
 	}
 
@@ -2757,7 +2757,7 @@ ruu_writeback(void)
 			/* actual target address */rs->next_PC,
 		    /* opcode */rs->op,
             /* dir predictor update pointer */&rs->dir_update,
-			/* last stack recover idx */stack_recover_idx
+			/* last stack recover idx */rs->stack_recover_idx
 		);
 	}
 
@@ -4417,7 +4417,7 @@ ruu_dispatch(void)
 				/* actual target address */regs.regs_NPC,
 			    /* opcode */op,
                 /* dir predictor update pointer */&rs->dir_update,
-				/* last stack recover idx */stack_recover_idx
+				/* last stack recover idx */rs->stack_recover_idx
 			);
 		}
 	    }
