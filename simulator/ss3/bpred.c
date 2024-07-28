@@ -1526,6 +1526,9 @@ bpred_lookup(struct bpred_t *pred,	/* branch predictor instance */
 			
 			pred->reverse_retstack_pushes++;
 #endif /* !RAS_BUG_COMPATIBLE */
+			// Still need to track this like in FWD mode until ISA changes
+			dir_update_ptr->rev_dir.ras = TRUE; /* using RAS here */
+
 			return btarget;
 		}
 		
@@ -1537,7 +1540,7 @@ bpred_lookup(struct bpred_t *pred,	/* branch predictor instance */
 			pred->retstack.tos = (pred->retstack.tos + pred->retstack.size - 1) % pred->retstack.size;
 			pred->reverse_retstack_pops++;
 			
-			dir_update_ptr->rev_dir.ras = TRUE; /* using RAS here */
+			//dir_update_ptr->rev_dir.ras = TRUE; /* using RAS here */
 			
 			//return target;
 		}
@@ -1721,9 +1724,9 @@ bpred_update(struct bpred_t *pred,	/* branch predictor instance */
 				pred->reverse_used_bimod++;
 		}
 		
-		/* keep stats about rev JR's (CALLs); also, but don't change any bpred state for JR's
+		/* keep stats about rev JR's (should be CALLs but will update with ISA changes later); also, but don't change any bpred state for JR's
 		* which are returns unless there's no retstack */
-		if (MD_IS_CALL(op)) {
+		if (MD_IS_INDIR(op)) {
 			pred->reverse_jr_seen++;
 			
 			if (correct)

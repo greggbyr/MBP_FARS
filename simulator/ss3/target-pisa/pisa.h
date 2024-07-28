@@ -432,6 +432,7 @@ extern word_t md_lr_masks[];
 
 /* returns non-zero if instruction is a function return */
 #define MD_IS_RETURN(OP)		((OP) == JR && (RS) == 31)
+#define MD_IS_RETURN_FIXED(OP, inst)	((OP) == JR && (inst.b >> 24) == 31)
 
 /* returns non-zero if instruction is an indirect jump */
 #define MD_IS_INDIR(OP)			((OP) == JR)
