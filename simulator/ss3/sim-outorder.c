@@ -457,74 +457,12 @@ md_addr_t get_btarget (md_addr_t baddr) {
 	return btarget;
 }
 
-struct HashTable* is_call_hash;
-
-void init_is_call (void) {
-        is_call_hash = createHashTable(TABLE_SIZE);
-}
-
-void set_is_call (md_addr_t baddr, int is_call) {
-	const char* baddr_str = intToConstChar(baddr);
-	const char* is_call_str = intToConstChar(is_call);
-
-        insert(is_call_hash, baddr_str, is_call_str);
-}
-
-int get_is_call (md_addr_t baddr) {
-	const char* baddr_str = intToConstChar(baddr);
-
-        int is_call = atoi(retrieve(is_call_hash, baddr_str));
-
-        return is_call;
-}
-
-struct HashTable* is_return_hash;
-
-void init_is_return (void) {
-        is_return_hash = createHashTable(TABLE_SIZE);
-}
-
-void set_is_return (md_addr_t baddr, int is_return) {
-	const char* baddr_str = intToConstChar(baddr);
-        const char* is_return_str = intToConstChar(is_return);
-
-        insert(is_return_hash, baddr_str, is_return_str);
-}
-
-int get_is_return (md_addr_t baddr) {
-	const char* baddr_str = intToConstChar(baddr);
-
-        int is_return = atoi(retrieve(is_return_hash, baddr_str));
-
-        return is_return;
-}
-
-struct HashTable* last_stack_recover_idx_hash;
-
-void init_last_stack_recover_idx (void) {
-        last_stack_recover_idx_hash = createHashTable(TABLE_SIZE);
-}
-
-void set_last_stack_recover_idx (md_addr_t baddr, int last_stack_recover_idx) {
-	const char* baddr_str = intToConstChar(baddr);
-        const char* last_stack_recover_idx_str = intToConstChar(last_stack_recover_idx);
-
-        insert(last_stack_recover_idx_hash, baddr_str, last_stack_recover_idx_str);
-}
-
-int get_last_stack_recover_idx (md_addr_t baddr) {
-	const char* baddr_str = intToConstChar(baddr);
-
-        int last_stack_recover_idx = atoi(retrieve(last_stack_recover_idx_hash, baddr_str));
-
-        return last_stack_recover_idx;
-}
-
 struct outcome {
 	md_addr_t baddr;
 	md_addr_t btarget;
 	enum md_opcode op;
 	struct bpred_update_t *dir_update;
+	int last_stack_recover_idx;
 };
 
 struct outcome_history {
@@ -541,7 +479,7 @@ void init_outcome (void) {
 	oh.b_outcomes = calloc(oh.MAX_HIST_CNT, sizeof(struct outcome));
 }
 
-void append_outcome (md_addr_t fwd_baddr, md_addr_t fwd_btarget, enum md_opcode fwd_op, struct bpred_update_t *dir_update) {
+void append_outcome (md_addr_t fwd_baddr, md_addr_t fwd_btarget, enum md_opcode fwd_op, struct bpred_update_t *dir_update, int last_stack_recover_idx) {
 	oh.length++;
 	
 	if (oh.length > oh.MAX_HIST_CNT) {
@@ -564,6 +502,7 @@ void append_outcome (md_addr_t fwd_baddr, md_addr_t fwd_btarget, enum md_opcode 
 	oh.b_outcomes[oh.length - 1].btarget = fwd_btarget;
 	oh.b_outcomes[oh.length - 1].op = fwd_op;
 	oh.b_outcomes[oh.length - 1].dir_update = dir_update;
+	oh.b_outcomes[oh.length - 1].last_stack_recover_idx = last_stack_recover_idx;
 }
 
 struct outcome get_outcome (void) {
@@ -573,6 +512,7 @@ struct outcome get_outcome (void) {
 	o.baddr = oh.b_outcomes[oh.length - 1].btarget;
 	o.op = oh.b_outcomes[oh.length - 1].op;
 	o.dir_update = oh.b_outcomes[oh.length - 1].dir_update;
+	o.last_stack_recover_idx = oh.b_outcomes[oh.length - 1].last_stack_recover_idx;
 
 	oh.length--;
 	
@@ -590,9 +530,7 @@ void reverse_flow (void) {
 	
 	struct bpred_update_t *rev_dir_update_ptr;  /* FWD pred state pointer */
 
-    int fwd_is_call;
-	int fwd_is_return;
-	int last_stack_recover_idx;
+    int last_stack_recover_idx;
 
 	while (oh.length) {
 		struct outcome o = get_outcome();
@@ -601,18 +539,16 @@ void reverse_flow (void) {
 		fwd_op = o.op;
 		fwd_btarget = o.btarget;
 		rev_dir_update_ptr = o.dir_update;
+		last_stack_recover_idx = o.last_stack_recover_idx;
 		
 		fwd_act_btarget = get_btarget(fwd_baddr);
-		fwd_is_call = get_is_call(fwd_baddr);
-		fwd_is_return = get_is_return(fwd_baddr);
-		last_stack_recover_idx = get_last_stack_recover_idx(fwd_baddr);
 
 		rev_prd_btarget = bpred_lookup(pred,
 				/* branch address */fwd_baddr,
 				/* target address */fwd_act_btarget,
 				/* opcode */fwd_op,
-				/* call? */fwd_is_call,
-				/* return? */fwd_is_return,
+				/* call? */MD_IS_CALL(fwd_op),
+				/* return? */MD_IS_RETURN(fwd_op),
 				/* updt */rev_dir_update_ptr,
 				/* RSB index */&last_stack_recover_idx,
 				/* REV mode */ 1);
@@ -2619,7 +2555,8 @@ ruu_commit(void)
 		append_outcome(/* branch address */rs->PC,
 			/* actual target address */rs->next_PC,
 			/* opcode */rs->op,
-            /* dir predictor update pointer */&rs->dir_update
+            /* dir predictor update pointer */&rs->dir_update,
+			/* last stack recover idx */stack_recover_idx
 		);
 	}
 
@@ -2819,7 +2756,8 @@ ruu_writeback(void)
 		append_outcome(/* branch address */rs->PC,
 			/* actual target address */rs->next_PC,
 		    /* opcode */rs->op,
-            /* dir predictor update pointer */&rs->dir_update
+            /* dir predictor update pointer */&rs->dir_update,
+			/* last stack recover idx */stack_recover_idx
 		);
 	}
 
@@ -4471,14 +4409,15 @@ ruu_dispatch(void)
 			       /* predictor update ptr */&rs->dir_update,
 				   /* FWD mode */ 0);
 		  
-			if (rs->next_PC != (rs->PC + sizeof(md_inst_t))) {
-				set_btarget(rs->PC, rs->next_PC);
+			if (regs.regs_NPC != (regs.regs_PC + sizeof(md_inst_t))) {
+				set_btarget(regs.regs_PC, regs.regs_NPC);
 			}
 		  
 			append_outcome(/* branch address */regs.regs_PC,
 				/* actual target address */regs.regs_NPC,
 			    /* opcode */op,
-                /* dir predictor update pointer */&rs->dir_update
+                /* dir predictor update pointer */&rs->dir_update,
+				/* last stack recover idx */stack_recover_idx
 			);
 		}
 	    }
@@ -4698,10 +4637,6 @@ ruu_fetch(void)
 			   /* updt */&(fetch_data[fetch_tail].dir_update),
 			   /* RSB index */&stack_recover_idx,
 				   /* FWD mode */ 0);
-
-	  	set_last_stack_recover_idx(fetch_regs_PC, stack_recover_idx);
-		set_is_call(fetch_regs_PC, MD_IS_CALL(op));
-		set_is_return(fetch_regs_PC, MD_IS_RETURN(op));
 	  } else {
 	    fetch_pred_PC = 0;
 	  }
@@ -4838,9 +4773,6 @@ sim_main(void)
 {
 	init_outcome();
 	init_btarget();
-	init_is_call();
-	init_is_return();
-	init_last_stack_recover_idx();
 	
   /* ignore any floating point exceptions, they may occur on mis-speculated
      execution paths */
