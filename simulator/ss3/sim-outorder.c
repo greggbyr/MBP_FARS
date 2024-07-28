@@ -4745,7 +4745,7 @@ void reverse_flow (void) {
 				/* target address */fwd_act_btarget,
 				/* opcode */fwd_op,
 				/* call? */MD_IS_CALL(fwd_op),
-				/* return? */MD_IS_RETURN(fwd_op),
+				/* return? */MD_IS_INDIR(fwd_op),
 				/* updt */rev_dir_update_ptr,
 				/* RSB index */&last_stack_recover_idx,
 				/* REV mode */ 1);
