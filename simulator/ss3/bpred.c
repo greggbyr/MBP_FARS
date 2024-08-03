@@ -1255,9 +1255,9 @@ bpred_lookup(struct bpred_t *pred,	/* branch predictor instance */
 						fwd_valid_outcome = pred->fwd_dirpred.oht->oht.oc[key];
 						
 						// Only valid once in the OHT when in FWD mode
-						if (!flow_mode) {
-							pred->fwd_dirpred.oht->oht.valid[key] = 0;
-						}
+						//if (!flow_mode) {
+						//	pred->fwd_dirpred.oht->oht.valid[key] = 0;
+						//}
 					}
 				}
 					
@@ -1279,9 +1279,9 @@ bpred_lookup(struct bpred_t *pred,	/* branch predictor instance */
 						fwd_valid_outcome = pred->fwd_dirpred.oht->oht.oc[key];
 						
 						// Only valid once in the OHT when in FWD mode
-						if (!flow_mode) {
-							pred->fwd_dirpred.oht->oht.valid[key] = 0;
-						}
+						//if (!flow_mode) {
+						//	pred->fwd_dirpred.oht->oht.valid[key] = 0;
+						//}
 					}
 				}
 					
@@ -1417,9 +1417,9 @@ bpred_lookup(struct bpred_t *pred,	/* branch predictor instance */
 						rev_valid_outcome = pred->rev_dirpred.oht->oht.oc[key];
 						
 						// Only valid once in the OHT when in REV mode
-						if (flow_mode) {
-							pred->rev_dirpred.oht->oht.valid[key] = 0;
-						}
+						//if (flow_mode) {
+						//	pred->rev_dirpred.oht->oht.valid[key] = 0;
+						//}
 					}
 				}
 					
@@ -1441,9 +1441,9 @@ bpred_lookup(struct bpred_t *pred,	/* branch predictor instance */
 						rev_valid_outcome = pred->rev_dirpred.oht->oht.oc[key];
 						
 						// Only valid once in the OHT when in REV mode
-						if (flow_mode) {
-							pred->rev_dirpred.oht->oht.valid[key] = 0;
-						}
+						//if (flow_mode) {
+						//	pred->rev_dirpred.oht->oht.valid[key] = 0;
+						//}
 					}
 				}
 					
@@ -1917,6 +1917,7 @@ bpred_update(struct bpred_t *pred,	/* branch predictor instance */
 				pred->fhb.addr[pred->fhb.bot] = NULL;
 			}
 			
+			pred->fhb.addr[pred->fhb.bot] = baddr;
 			pred->fhb.fv[pred->fhb.bot] = 0;
 			pred->fhb.rv[pred->fhb.bot] = 1;
 			pred->fhb.o[pred->fhb.bot] = taken;
@@ -1944,6 +1945,7 @@ bpred_update(struct bpred_t *pred,	/* branch predictor instance */
 				pred->fhb.addr[pred->fhb.top] = NULL;
 			}
 			
+			pred->fhb.addr[pred->fhb.top] = baddr;
 			pred->fhb.fv[pred->fhb.top] = 1;
 			pred->fhb.rv[pred->fhb.top] = 0;
 			pred->fhb.o[pred->fhb.top] = taken;
@@ -2111,18 +2113,25 @@ bpred_update(struct bpred_t *pred,	/* branch predictor instance */
 	if ((MD_OP_FLAGS(op) & (F_CTRL|F_UNCOND)) != (F_CTRL|F_UNCOND) && ((pred->class == BPredOHT) || (pred->class == BPredMBP))) {
 		// Update only one OHT depending on the flow and only if fhb addr is set
 		if (fhb_addr) {
-			fwd_key = key_from_features (pred->fwd_dirpred.twolev, fhb_addr); // Get unmasked key from GHR and PC
-			rev_key = key_from_features (pred->rev_dirpred.twolev, fhb_addr); // Get unmasked key from GHR and PC
-			
+			/* Mask current keys */
 			fwd_key = fwd_key & (pred->fwd_dirpred.oht->oht.size - 1); // mask key based on outcome history table size
-			rev_key = rev_key & (pred->rev_dirpred.oht->oht.size - 1); // mask key based on outcome history table size
+                        rev_key = rev_key & (pred->rev_dirpred.oht->oht.size - 1); // mask key based on outcome history table size
+
+			/* Get future keys from FHB */
+			int fwd_future_key = key_from_features (pred->fwd_dirpred.twolev, fhb_addr); // Get unmasked key from GHR and PC
+			int rev_future_key = key_from_features (pred->rev_dirpred.twolev, fhb_addr); // Get unmasked key from GHR and PC
+			
+			fwd_future_key = fwd_future_key & (pred->fwd_dirpred.oht->oht.size - 1); // mask key based on outcome history table size
+			rev_future_key = rev_future_key & (pred->rev_dirpred.oht->oht.size - 1); // mask key based on outcome history table size
 			
 			if (!flow_mode) {
-				pred->rev_dirpred.oht->oht.oc[rev_key] = oc; //Update with oc since it is the past outcome that was waiting in the FHB
-				pred->rev_dirpred.oht->oht.valid[rev_key] = 1;
+				pred->rev_dirpred.oht->oht.oc[rev_future_key] = oc; //Update with oc since it is the past outcome that was waiting in the FHB
+				pred->rev_dirpred.oht->oht.valid[rev_future_key] = 1;
+				pred->fwd_dirpred.oht->oht.valid[fwd_key] = 0;		//Even if not used for predict, need to invalidate FWD mode OHT Val at this addr.
 			} else {
-				pred->fwd_dirpred.oht->oht.oc[fwd_key] = oc;
-				pred->fwd_dirpred.oht->oht.valid[fwd_key] = 1;
+				pred->fwd_dirpred.oht->oht.oc[fwd_future_key] = oc;
+				pred->fwd_dirpred.oht->oht.valid[fwd_future_key] = 1;
+				pred->rev_dirpred.oht->oht.valid[rev_key] = 0;          //Even if not used for predict, need to invalidate REV mode OHT Val at this addr.
 			}
 		}		
 	}

@@ -15,7 +15,7 @@ of SimpleScalar, LLC (info@simplescalar.com).
 
 sim: command line: /home/greggbyr/common/Documents/MBP_FARS/simulator/ss3/sim-outorder -max:inst 10000000 -bpred 2lev -bpred:2lev 1 16384 14 1 run.perl primes.pl 
 
-sim: simulation started @ Sun Jul 28 02:16:55 2024, options follow:
+sim: simulation started @ Fri Aug  2 21:40:25 2024, options follow:
 
 sim-outorder: This simulator implements a very detailed out-of-order issue
 superscalar processor with a two-level memory system and speculative
@@ -149,8 +149,8 @@ sim_num_refs                4474489 # total number of loads and stores committed
 sim_num_loads               2743759 # total number of loads committed
 sim_num_stores         1730730.0000 # total number of stores committed
 sim_num_branches            2039308 # total number of branches committed
-sim_elapsed_time                  6 # total simulation time in seconds
-sim_inst_rate          1666666.8333 # simulation speed (in insts/sec)
+sim_elapsed_time                  5 # total simulation time in seconds
+sim_inst_rate          2000000.2000 # simulation speed (in insts/sec)
 sim_total_insn             11190639 # total number of instructions executed
 sim_total_refs              4947929 # total number of loads and stores executed
 sim_total_loads             3045366 # total number of loads executed
@@ -280,7 +280,7 @@ ld_target_big_endian              0 # target executable endian-ness, non-zero if
 mem.page_count                  171 # total number of pages allocated
 mem.page_mem                   684k # total size of memory pages allocated
 mem.ptab_misses                1740 # total first level page table misses
-mem.ptab_accesses          84954265 # total page table accesses
+mem.ptab_accesses          84954257 # total page table accesses
 mem.ptab_miss_rate           0.0000 # first level page table miss rate
 
 Post-run perl

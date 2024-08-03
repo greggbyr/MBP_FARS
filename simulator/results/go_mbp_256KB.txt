@@ -15,7 +15,7 @@ of SimpleScalar, LLC (info@simplescalar.com).
 
 sim: command line: /home/greggbyr/common/Documents/MBP_FARS/simulator/ss3/sim-outorder -max:inst 10000000 -bpred mbp -bpred:mbp 1 262144 18 1 run.go 50 21 5stone21.in 
 
-sim: simulation started @ Sun Jul 28 02:22:56 2024, options follow:
+sim: simulation started @ Fri Aug  2 21:47:10 2024, options follow:
 
 sim-outorder: This simulator implements a very detailed out-of-order issue
 superscalar processor with a two-level memory system and speculative
@@ -201,15 +201,15 @@ bpred_mbp.ras_hits.PP         67115 # total number of RAS hits
 bpred_mbp.ras_rate.PP     0.9852 # RAS prediction rate (i.e., RAS hits/used RAS)
 bpred_mbp.reverse_lookups      1810313 # total number of reverse bpred lookups
 bpred_mbp.reverse_updates      1810313 # total number of reverse updates
-bpred_mbp.reverse_addr_hits      1739410 # total number of reverse address-predicted hits
-bpred_mbp.reverse_dir_hits      1744635 # total number of reverse direction-predicted hits (includes addr-hits)
-bpred_mbp.reverse_misses        65678 # total number of reverse misses
+bpred_mbp.reverse_addr_hits      1739813 # total number of reverse address-predicted hits
+bpred_mbp.reverse_dir_hits      1745024 # total number of reverse direction-predicted hits (includes addr-hits)
+bpred_mbp.reverse_misses        65289 # total number of reverse misses
 bpred_mbp.reverse_jr_hits        75506 # total number of reverse address-predicted hits for JR's
 bpred_mbp.reverse_jr_seen        79564 # total number of reverse JR's seen
 bpred_mbp.reverse_jr_non_ras_hits.PP         7384 # total number of reverse address-predicted hits for non-RAS JR's
 bpred_mbp.reverse_jr_non_ras_seen.PP        11442 # total number of reverse non-RAS JR's seen
-bpred_mbp.reverse_bpred_addr_rate    0.9608 # branch address-prediction rate (i.e., addr-hits/updates)
-bpred_mbp.reverse_bpred_dir_rate    0.9637 # branch direction-prediction rate (i.e., all-hits/updates)
+bpred_mbp.reverse_bpred_addr_rate    0.9611 # branch address-prediction rate (i.e., addr-hits/updates)
+bpred_mbp.reverse_bpred_dir_rate    0.9639 # branch direction-prediction rate (i.e., all-hits/updates)
 bpred_mbp.reverse_bpred_jr_rate    0.9490 # JR address-prediction rate (i.e., JR addr-hits/JRs seen)
 bpred_mbp.reverse_bpred_jr_non_ras_rate.PP    0.6453 # non-RAS JR addr-pred rate (ie, non-RAS JR hits/JRs seen)
 bpred_mbp.reverse_retstack_pushes        68122 # total number of reverse address pushed onto ret-addr stack
@@ -280,7 +280,7 @@ ld_target_big_endian              0 # target executable endian-ness, non-zero if
 mem.page_count                  289 # total number of pages allocated
 mem.page_mem                  1156k # total size of memory pages allocated
 mem.ptab_misses                 643 # total first level page table misses
-mem.ptab_accesses          72810054 # total page table accesses
+mem.ptab_accesses          72810046 # total page table accesses
 mem.ptab_miss_rate           0.0000 # first level page table miss rate
 
 Post-run go

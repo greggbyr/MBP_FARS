@@ -15,7 +15,7 @@ of SimpleScalar, LLC (info@simplescalar.com).
 
 sim: command line: /home/greggbyr/common/Documents/MBP_FARS/simulator/ss3/sim-outorder -max:inst 10000000 -bpred 2lev -bpred:2lev 1 262144 18 1 run.go 50 21 5stone21.in 
 
-sim: simulation started @ Sun Jul 28 02:18:54 2024, options follow:
+sim: simulation started @ Fri Aug  2 21:42:27 2024, options follow:
 
 sim-outorder: This simulator implements a very detailed out-of-order issue
 superscalar processor with a two-level memory system and speculative
@@ -280,7 +280,7 @@ ld_target_big_endian              0 # target executable endian-ness, non-zero if
 mem.page_count                  289 # total number of pages allocated
 mem.page_mem                  1156k # total size of memory pages allocated
 mem.ptab_misses                 643 # total first level page table misses
-mem.ptab_accesses          72810060 # total page table accesses
+mem.ptab_accesses          72810052 # total page table accesses
 mem.ptab_miss_rate           0.0000 # first level page table miss rate
 
 Post-run go
